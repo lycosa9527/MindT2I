@@ -13,6 +13,7 @@ A Flask-based web application that integrates with Alibaba Cloud's DashScope pla
 - 💾 **Local Storage**: Generated images are saved locally in a temp folder
 - 📱 **Modern UI**: Beautiful, responsive web interface with API documentation
 - ⚡ **Fast**: Optimized for quick image generation and retrieval
+- 📝 **Plain Text Output**: Returns pure plain text markdown image syntax `![](image_url.png)` with no JSON formatting
 
 ### **Enterprise Features**
 - 🔒 **Enterprise Security**: Rate limiting, input validation, and protection against common attacks
@@ -74,6 +75,8 @@ The application will start on `http://localhost:9528`
 
 ## API Endpoints
 
+> **💡 Simplified Usage**: The API now supports minimal requests with just `{"prompt": "your text"}`. All other parameters have sensible defaults and are optional.
+
 ### 1. Home Page & Documentation
 - **URL**: `/`
 - **Method**: `GET`
@@ -110,12 +113,27 @@ The application automatically enhances simple prompts using **Qwen Turbo via Das
 
 Set `ENABLE_PROMPT_ENHANCEMENT=true` in your `.env` file to enable this feature.
 
-### 2. Generate Image
+### 2. Generate Image (JSON Response)
 - **URL**: `/generate-image`
 - **Method**: `POST`
 - **Content-Type**: `application/json`
 
+### 3. Generate Image (Plain Text Response)
+- **URL**: `/generate-image-text`
+- **Method**: `POST`
+- **Content-Type**: `application/json`
+- **Description**: Returns only the plain text markdown image syntax `![](image_url.png)` with no JSON formatting
+
 #### Request Body
+
+**Minimal Request (Recommended):**
+```json
+{
+    "prompt": "一只友好的猫在明亮的现代科学教室里"
+}
+```
+
+**Full Request (All Parameters):**
 ```json
 {
     "prompt": "一副典雅庄重的对联悬挂于厅堂之中，房间是个安静古典的中式布置，桌子上放着一些青花瓷，对联上左书"义本生知人机同道善思新"，右书"通云赋智乾坤启数高志远"， 横批"智启通义"，字体飘逸，中间挂在一着一副中国风的画作，内容是岳阳楼。",
@@ -127,22 +145,28 @@ Set `ENABLE_PROMPT_ENHANCEMENT=true` in your `.env` file to enable this feature.
 ```
 
 #### Parameters
-- `prompt` (required): Text description for image generation
-- `size` (optional): Image dimensions and aspect ratio (default: "1664*928")
+
+**Required:**
+- `prompt`: Text description for image generation
+
+**Optional (all have sensible defaults):**
+- `size`: Image dimensions and aspect ratio (default: "1664*928")
   - `1664*928`: 16:9 (landscape) - **Default**
   - `1472*1140`: 4:3 (landscape) 
   - `1328*1328`: 1:1 (square)
   - `1140*1472`: 3:4 (portrait)
   - `928*1664`: 9:16 (portrait)
-- `negative_prompt` (optional): What to avoid in the image
-- `watermark` (optional): Add watermark (default: false, for clean educational materials)
-- `prompt_extend` (optional): Extend prompt automatically (default: false, since we use Qwen Turbo via DashScope for enhancement)
+- `negative_prompt`: What to avoid in the image (default: "")
+- `watermark`: Add watermark (default: false, for clean educational materials)
+- `prompt_extend`: Extend prompt automatically (default: false, since we use Qwen Turbo via DashScope for enhancement)
+- `plain_text`: Set to `true` to return only plain text markdown syntax instead of JSON (default: false)
 
 #### Response
 ```json
 {
     "success": true,
     "image_url": "http://localhost:9528/temp_images/generated_20241201_143022_abc12345.jpg",
+    "markdown_image": "![](http://localhost:9528/temp_images/generated_20241201_143022_abc12345.jpg)",
     "message": "Image generated successfully",
     "filename": "generated_20241201_143022_abc12345.jpg",
     "size": "1664*928",
@@ -152,12 +176,12 @@ Set `ENABLE_PROMPT_ENHANCEMENT=true` in your `.env` file to enable this feature.
 }
 ```
 
-### 3. Retrieve Generated Image
+### 4. Retrieve Generated Image
 - **URL**: `/temp_images/<filename>`
 - **Method**: `GET`
 - **Description**: Download generated images
 
-### 4. Health Check
+### 5. Health Check
 - **URL**: `/health`
 - **Method**: `GET`
 - **Description**: Comprehensive application status and system health monitoring
@@ -179,7 +203,7 @@ Set `ENABLE_PROMPT_ENHANCEMENT=true` in your `.env` file to enable this feature.
 }
 ```
 
-### 5. Configuration Information
+### 6. Configuration Information
 - **URL**: `/config`
 - **Method**: `GET`
 - **Description**: Non-sensitive application configuration and supported features
@@ -203,14 +227,25 @@ Set `ENABLE_PROMPT_ENHANCEMENT=true` in your `.env` file to enable this feature.
 }
 ```
 
-### 6. Debug Interface
+### 7. Debug Interface
 - **URL**: `/debug`
 - **Method**: `GET`
 - **Description**: Interactive web interface for testing the API and viewing generated images
 
 ## Usage Examples
 
-### cURL Example
+### cURL Examples
+
+#### Minimal Request (Recommended)
+```bash
+curl --location 'http://localhost:9528/generate-image' \
+--header 'Content-Type: application/json' \
+--data '{
+    "prompt": "一只友好的猫在明亮的现代科学教室里"
+}'
+```
+
+#### JSON Response with All Parameters
 ```bash
 curl --location 'http://localhost:9528/generate-image' \
 --header 'Content-Type: application/json' \
@@ -218,11 +253,43 @@ curl --location 'http://localhost:9528/generate-image' \
     "prompt": "一副典雅庄重的对联悬挂于厅堂之中，房间是个安静古典的中式布置，桌子上放着一些青花瓷，对联上左书"义本生知人机同道善思新"，右书"通云赋智乾坤启数高志远"， 横批"智启通义"，字体飘逸，中间挂在一着一副中国风的画作，内容是岳阳楼。",
     "size": "1328*1328",
     "negative_prompt": "",
-    "watermark": true
+    "watermark": true,
+    "prompt_extend": true
 }'
 ```
 
-### Python Example
+#### Plain Text Response (Minimal)
+```bash
+curl --location 'http://localhost:9528/generate-image-text' \
+--header 'Content-Type: application/json' \
+--data '{
+    "prompt": "一只友好的猫在明亮的现代科学教室里"
+}'
+```
+
+**Response**: `![](http://localhost:9528/temp_images/generated_20241201_143022_abc12345.jpg)`
+
+### Python Examples
+
+#### Minimal Request (Recommended)
+```python
+import requests
+
+url = "http://localhost:9528/generate-image"
+payload = {
+    "prompt": "A beautiful sunset over mountains with golden clouds"
+}
+
+response = requests.post(url, json=payload)
+if response.status_code == 200:
+    result = response.json()
+    print(f"Image generated: {result['image_url']}")
+    print(f"Markdown format: {result['markdown_image']}")
+else:
+    print(f"Error: {response.text}")
+```
+
+#### JSON Response with All Parameters
 ```python
 import requests
 import json
@@ -231,18 +298,62 @@ url = "http://localhost:9528/generate-image"
 payload = {
     "prompt": "A beautiful sunset over mountains with golden clouds",
     "size": "1664*928",  # 16:9 landscape
-    "watermark": False
+    "watermark": False,
+    "negative_prompt": "dark, gloomy",
+    "prompt_extend": True
 }
 
 response = requests.post(url, json=payload)
 if response.status_code == 200:
     result = response.json()
     print(f"Image generated: {result['image_url']}")
+    print(f"Markdown format: {result['markdown_image']}")
 else:
     print(f"Error: {response.text}")
 ```
 
-### JavaScript Example
+#### Plain Text Response (Minimal)
+```python
+import requests
+
+url = "http://localhost:9528/generate-image-text"
+payload = {
+    "prompt": "A serene Japanese garden with cherry blossoms"
+}
+
+response = requests.post(url, json=payload)
+if response.status_code == 200:
+    markdown_text = response.text
+    print(f"Plain text output: {markdown_text}")
+    # Output: ![](http://localhost:9528/temp_images/generated_20241201_143022_abc12345.jpg)
+else:
+    print(f"Error: {response.text}")
+```
+
+### JavaScript Examples
+
+#### Minimal Request (Recommended)
+```javascript
+const response = await fetch('http://localhost:9528/generate-image', {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+        prompt: "A serene Japanese garden with cherry blossoms"
+    })
+});
+
+const result = await response.json();
+if (result.success) {
+    console.log(`Image URL: ${result.image_url}`);
+    console.log(`Markdown format: ${result.markdown_image}`);
+} else {
+    console.error(`Error: ${result.error}`);
+}
+```
+
+#### JSON Response with All Parameters
 ```javascript
 const response = await fetch('http://localhost:9528/generate-image', {
     method: 'POST',
@@ -251,15 +362,41 @@ const response = await fetch('http://localhost:9528/generate-image', {
     },
     body: JSON.stringify({
         prompt: "A serene Japanese garden with cherry blossoms",
-        size: "1140*1472"  // 3:4 portrait
+        size: "1140*1472",  // 3:4 portrait
+        negative_prompt: "dark, gloomy",
+        watermark: false,
+        prompt_extend: true
     })
 });
 
 const result = await response.json();
 if (result.success) {
     console.log(`Image URL: ${result.image_url}`);
+    console.log(`Markdown format: ${result.markdown_image}`);
 } else {
     console.error(`Error: ${result.error}`);
+}
+```
+
+#### Plain Text Response (Minimal)
+```javascript
+const response = await fetch('http://localhost:9528/generate-image-text', {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+        prompt: "A friendly cat in a bright science classroom"
+    })
+});
+
+if (response.ok) {
+    const markdownText = await response.text();
+    console.log(`Plain text output: ${markdownText}`);
+    // Output: ![](http://localhost:9528/temp_images/generated_20241201_143022_abc12345.jpg)
+} else {
+    const errorText = await response.text();
+    console.error(`Error: ${errorText}`);
 }
 ```
 

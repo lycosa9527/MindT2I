@@ -22,12 +22,12 @@ logger = logging.getLogger(__name__)
 # Configuration
 BASE_URL = "http://localhost:9528"
 TEST_PROMPTS = [
-    "一副典雅庄重的对联悬挂于厅堂之中，房间是个安静古典的中式布置，桌子上放着一些青花瓷，对联上左书义本生知人机同道善思新，右书通云赋智乾坤启数高志远， 横批智启通义，字体飘逸，中间挂在一着一副中国风的画作，内容是岳阳楼。",
-    "A serene Japanese garden with cherry blossoms in full bloom, traditional wooden architecture, peaceful atmosphere",
-    "A futuristic cityscape with flying cars, neon lights, and towering skyscrapers at sunset",
-    "a cat",  # Simple prompt to test enhancement
-    "sunset",  # Very simple prompt to test enhancement
-    "math class"  # Educational context prompt
+    "传统中式庭院，优雅的书法卷轴，古典家具和青花瓷花瓶",
+    "宁静的日式花园，盛开的樱花，传统木制建筑，宁静氛围",
+    "未来城市景观，飞行汽车，霓虹灯，日落时分的摩天大楼",
+    "一只猫",  # 简单提示词测试增强
+    "美丽的日落",  # 简单提示词测试增强 (3+ characters)
+    "数学课"  # 教育背景提示词
 ]
 
 def test_health_check():
@@ -38,8 +38,9 @@ def test_health_check():
         if response.status_code == 200:
             data = response.json()
             logger.info(f"Health check passed - Status: {data['status']}")
-            logger.info(f"API Key configured: {data['api_key_configured']}")
-            logger.info(f"Timestamp: {data['timestamp']}")
+            logger.info(f"API Key configured: {data.get('system', {}).get('api_key_configured', 'Unknown')}")
+            logger.info(f"Free space: {data.get('system', {}).get('free_space_mb', 'Unknown')} MB")
+            logger.info(f"Stored images: {data.get('system', {}).get('stored_images', 'Unknown')}")
             return True
         else:
             logger.error(f"Health check failed - Status: {response.status_code}")
@@ -58,8 +59,8 @@ def test_image_generation(prompt, size="1664*928"):
         "prompt": prompt,
         "size": size,
         "negative_prompt": "",
-        "watermark": True,
-        "prompt_extend": False  # Set to False since we use Qwen Turbo for enhancement
+        "watermark": False,  # Set to False for clean educational materials
+        "prompt_extend": False  # Set to False since we use Qwen Turbo via DashScope for enhancement
     }
     
     try:
@@ -107,7 +108,8 @@ def test_image_retrieval(image_url):
     """Test retrieving the generated image"""
     logger.info("Testing image retrieval...")
     try:
-        response = requests.get(f"{BASE_URL}{image_url}", timeout=30)
+        # image_url is now a full URL, so we can use it directly
+        response = requests.get(image_url, timeout=30)
         if response.status_code == 200:
             content_length = len(response.content)
             logger.info(f"Image retrieved successfully - Size: {content_length} bytes")
@@ -128,11 +130,26 @@ def test_invalid_requests():
     try:
         response = requests.post(f"{BASE_URL}/generate-image", json={}, timeout=10)
         if response.status_code == 400:
+            error_data = response.json()
             logger.info("Correctly rejected missing prompt")
+            logger.info(f"Error code: {error_data.get('error_code', 'None')}")
         else:
             logger.error(f"Unexpected response - Status: {response.status_code}")
     except Exception as e:
         logger.error(f"Error testing missing prompt - Details: {e}")
+    
+    # Test empty prompt
+    logger.info("Testing empty prompt...")
+    try:
+        response = requests.post(f"{BASE_URL}/generate-image", json={"prompt": ""}, timeout=10)
+        if response.status_code == 400:
+            error_data = response.json()
+            logger.info("Correctly rejected empty prompt")
+            logger.info(f"Error code: {error_data.get('error_code', 'None')}")
+        else:
+            logger.error(f"Unexpected response - Status: {response.status_code}")
+    except Exception as e:
+        logger.error(f"Error testing empty prompt - Details: {e}")
     
     # Test invalid JSON
     logger.info("Testing invalid JSON...")
@@ -144,11 +161,94 @@ def test_invalid_requests():
             timeout=10
         )
         if response.status_code == 400:
+            error_data = response.json()
             logger.info("Correctly rejected invalid JSON")
+            logger.info(f"Error code: {error_data.get('error_code', 'None')}")
         else:
             logger.error(f"Unexpected response - Status: {response.status_code}")
     except Exception as e:
         logger.error(f"Error testing invalid JSON - Details: {e}")
+
+def test_security_features():
+    """Test security features and protections"""
+    logger.info("Testing security features...")
+    
+    # Test rate limiting
+    logger.info("Testing rate limiting...")
+    try:
+        responses = []
+        for i in range(12):  # Try to exceed 10 per minute limit
+            response = requests.post(f"{BASE_URL}/generate-image", 
+                                  json={"prompt": f"test rate limit {i}"}, 
+                                  timeout=10)
+            responses.append(response.status_code)
+            if response.status_code == 429:  # Rate limited
+                break
+        
+        logger.info(f"Made {len(responses)} requests")
+        if 429 in responses:
+            logger.info("✅ Rate limiting working correctly")
+        else:
+            logger.warning("⚠️ Rate limiting not detected")
+    except Exception as e:
+        logger.error(f"Error testing rate limiting - Details: {e}")
+    
+    # Test path traversal protection
+    logger.info("Testing path traversal protection...")
+    try:
+        response = requests.get(f"{BASE_URL}/temp_images/../../../etc/passwd", timeout=10)
+        if response.status_code == 404:
+            error_data = response.json()
+            logger.info("✅ Path traversal protection working (Flask routing protection)")
+            logger.info(f"Error code: {error_data.get('error_code', 'None')}")
+        else:
+            logger.warning("⚠️ Path traversal protection may be weak")
+    except Exception as e:
+        logger.error(f"Error testing path traversal - Details: {e}")
+    
+    # Test XSS filename protection
+    logger.info("Testing XSS filename protection...")
+    try:
+        response = requests.get(f"{BASE_URL}/temp_images/<script>alert('xss')</script>.jpg", timeout=10)
+        if response.status_code == 404:
+            error_data = response.json()
+            logger.info("✅ XSS filename protection working (Flask routing protection)")
+            logger.info(f"Error code: {error_data.get('error_code', 'None')}")
+        else:
+            logger.warning("⚠️ XSS filename protection may be weak")
+    except Exception as e:
+        logger.error(f"Error testing XSS protection - Details: {e}")
+
+def test_new_endpoints():
+    """Test new endpoints added in the improved version"""
+    logger.info("Testing new endpoints...")
+    
+    # Test configuration endpoint
+    logger.info("Testing configuration endpoint...")
+    try:
+        response = requests.get(f"{BASE_URL}/config", timeout=10)
+        if response.status_code == 200:
+            config_data = response.json()
+            logger.info("✅ Configuration endpoint working")
+            logger.info(f"Default image size: {config_data.get('config', {}).get('default_image_size', 'Unknown')}")
+            logger.info(f"Prompt enhancement: {config_data.get('config', {}).get('prompt_enhancement_enabled', 'Unknown')}")
+        else:
+            logger.error(f"Configuration endpoint error: {response.text}")
+    except Exception as e:
+        logger.error(f"Error testing configuration endpoint - Details: {e}")
+    
+    # Test error handling
+    logger.info("Testing error handling...")
+    try:
+        response = requests.get(f"{BASE_URL}/nonexistent", timeout=10)
+        if response.status_code == 404:
+            error_data = response.json()
+            logger.info("✅ 404 error handling working")
+            logger.info(f"Error code: {error_data.get('error_code', 'None')}")
+        else:
+            logger.warning("⚠️ Unexpected response for 404")
+    except Exception as e:
+        logger.error(f"Error testing 404 handling - Details: {e}")
 
 def main():
     """Main test function"""
@@ -176,6 +276,12 @@ def main():
     # Test invalid requests
     test_invalid_requests()
     
+    # Test security features
+    test_security_features()
+    
+    # Test new endpoints
+    test_new_endpoints()
+    
     # Summary
     logger.info("Test Summary")
     logger.info("=" * 50)
@@ -189,6 +295,7 @@ def main():
     
     logger.info(f"API Documentation: {BASE_URL}/")
     logger.info(f"Health Check: {BASE_URL}/health")
+    logger.info(f"Configuration: {BASE_URL}/config")
 
 if __name__ == "__main__":
     main()
