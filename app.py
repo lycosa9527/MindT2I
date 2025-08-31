@@ -58,9 +58,42 @@ app.config['SERVER_PORT'] = os.environ.get('SERVER_PORT', '9528')
 
 # Flask server binding configuration
 app.config['FLASK_HOST'] = os.environ.get('FLASK_HOST', '0.0.0.0')
+app.config['FLASK_PORT'] = int(os.environ.get('FLASK_PORT', '9528'))
+
+# Timeout and performance settings
+app.config['API_TIMEOUT'] = int(os.environ.get('API_TIMEOUT', '60'))  # seconds
+app.config['IMAGE_DOWNLOAD_TIMEOUT'] = int(os.environ.get('IMAGE_DOWNLOAD_TIMEOUT', '30'))  # seconds
+app.config['MAX_PROMPT_LENGTH'] = int(os.environ.get('MAX_PROMPT_LENGTH', '1000'))
+app.config['MIN_PROMPT_LENGTH'] = int(os.environ.get('MIN_PROMPT_LENGTH', '3'))
+
+# Debug mode configuration
+app.config['DEBUG_MODE'] = os.environ.get('FLASK_DEBUG', 'false').lower() == 'true'
 
 # Ensure temp folder exists
 os.makedirs(app.config['TEMP_FOLDER'], exist_ok=True)
+
+def clean_temp_images_folder():
+    """Clean all files from the temp images folder on application startup"""
+    try:
+        temp_folder = app.config['TEMP_FOLDER']
+        if os.path.exists(temp_folder):
+            # Get list of all files in temp folder
+            files = [f for f in os.listdir(temp_folder) if os.path.isfile(os.path.join(temp_folder, f))]
+            
+            # Remove all files
+            for file in files:
+                file_path = os.path.join(temp_folder, file)
+                try:
+                    os.remove(file_path)
+                    logger.info(f"Removed temp file: {file}")
+                except OSError as e:
+                    logger.warning(f"Failed to remove temp file {file}: {e}")
+            
+            logger.info(f"Cleaned temp images folder: {len(files)} files removed")
+        else:
+            logger.info("Temp images folder does not exist, skipping cleanup")
+    except Exception as e:
+        logger.error(f"Error cleaning temp images folder: {e}")
 
 def validate_configuration():
     """Validate application configuration and provide helpful feedback"""
@@ -85,12 +118,12 @@ def validate_prompt_basic(prompt):
     Returns (is_valid, reason) tuple.
     """
     # Check if prompt is empty or too short
-    if not prompt or len(prompt.strip()) < 3:
-        return False, "Prompt is too short (min 3 characters)"
+    if not prompt or len(prompt.strip()) < app.config['MIN_PROMPT_LENGTH']:
+        return False, f"Prompt is too short (min {app.config['MIN_PROMPT_LENGTH']} characters)"
     
     # Check if prompt is too long
-    if len(prompt) > 1000:
-        return False, "Prompt is too long (max 1000 characters)"
+    if len(prompt) > app.config['MAX_PROMPT_LENGTH']:
+        return False, f"Prompt is too long (max {app.config['MAX_PROMPT_LENGTH']} characters)"
     
     return True, "Prompt is valid"
 
@@ -174,7 +207,7 @@ Enhanced prompt:"""
             app.config['QWEN_TURBO_URL'],
             headers=headers,
             json=payload,
-            timeout=30
+            timeout=app.config['API_TIMEOUT']
         )
         
         if response.status_code == 200:
@@ -498,7 +531,7 @@ def generate_image():
                 app.config['QWEN_IMAGE_URL'],
                 headers=headers,
                 json=payload,
-                timeout=60  # 60 second timeout
+                timeout=app.config['API_TIMEOUT']
             )
             response.raise_for_status()
         except requests.exceptions.Timeout:
@@ -560,7 +593,7 @@ def generate_image():
         
         # Save image to temp folder
         try:
-            image_response = requests.get(image_url, timeout=30)
+            image_response = requests.get(image_url, timeout=app.config['IMAGE_DOWNLOAD_TIMEOUT'])
             image_response.raise_for_status()
             
             image_path = os.path.join(app.config['TEMP_FOLDER'], safe_filename)
@@ -699,7 +732,7 @@ def generate_image_text():
                 app.config['QWEN_IMAGE_URL'],
                 headers=headers,
                 json=payload,
-                timeout=60  # 60 second timeout
+                timeout=app.config['API_TIMEOUT'] # Use API_TIMEOUT
             )
             response.raise_for_status()
         except requests.exceptions.Timeout:
@@ -740,7 +773,7 @@ def generate_image_text():
         
         # Save image to temp folder
         try:
-            image_response = requests.get(image_url, timeout=30)
+            image_response = requests.get(image_url, timeout=app.config['IMAGE_DOWNLOAD_TIMEOUT']) # Use IMAGE_DOWNLOAD_TIMEOUT
             image_response.raise_for_status()
             
             image_path = os.path.join(app.config['TEMP_FOLDER'], safe_filename)
@@ -935,12 +968,17 @@ if __name__ == '__main__':
         print("   Example: export DASHSCOPE_API_KEY='your_api_key_here'")
         print("")
     
+    # Clean temp images folder on startup
+    print("Cleaning temporary images folder...")
+    clean_temp_images_folder()
+    print("")
+    
     print("Starting MindT2I Flask Application...")
-    print(f"Server binding to: {app.config['FLASK_HOST']}:{app.config['SERVER_PORT']}")
+    print(f"Server binding to: {app.config['FLASK_HOST']}:{app.config['FLASK_PORT']}")
     print(f"API Documentation available at: http://{app.config['SERVER_HOST']}:{app.config['SERVER_PORT']}/")
     print(f"Debug Tool available at: http://{app.config['SERVER_HOST']}:{app.config['SERVER_PORT']}/debug")
     print(f"Health check available at: http://{app.config['SERVER_HOST']}:{app.config['SERVER_PORT']}/health")
     print("")
     
     # Run the application
-    app.run(debug=True, host=app.config['FLASK_HOST'], port=9528)
+    app.run(debug=app.config['DEBUG_MODE'], host=app.config['FLASK_HOST'], port=app.config['FLASK_PORT'])

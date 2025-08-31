@@ -429,29 +429,39 @@ The application uses environment variables for configuration. The easiest way to
 - `DEFAULT_WATERMARK`: Enable watermark by default (default: "false", for clean educational materials)
 - `DEFAULT_PROMPT_EXTEND`: Enable prompt extension by default (default: "false", since we use Qwen Turbo via DashScope for enhancement)
 - `ENABLE_PROMPT_ENHANCEMENT`: Enable AI-powered educational prompt enhancement for K12 classroom use using Qwen Turbo via DashScope (default: "true")
-- `FLASK_PORT`: Port to run the application on (default: 9528)
+- `FLASK_HOST`: IP address to bind Flask server to (default: "0.0.0.0" for all interfaces)
+- `FLASK_PORT`: Port for Flask server to bind to (default: 9528)
+- `FLASK_DEBUG`: Enable debug mode (default: "false" for production)
 - `SERVER_HOST`: Server hostname/IP for image URLs (default: "localhost")
 - `SERVER_PORT`: Server port for image URLs (default: "9528")
-- `FLASK_HOST`: IP address to bind Flask server to (default: "0.0.0.0" for all interfaces)
+- `API_TIMEOUT`: Timeout for DashScope API calls in seconds (default: 60)
+- `IMAGE_DOWNLOAD_TIMEOUT`: Timeout for image download in seconds (default: 30)
+- `MAX_PROMPT_LENGTH`: Maximum prompt length in characters (default: 1000)
+- `MIN_PROMPT_LENGTH`: Minimum prompt length in characters (default: 3)
 - `TEMP_FOLDER`: Folder to store generated images (default: temp_images)
 - `LOG_LEVEL`: Logging level (default: INFO)
 
 ### Application Settings
 - **Max file size**: 16MB
 - **Temp folder**: `temp_images/`
-- **API timeout**: 120 seconds for image generation
-- **Port**: 9528 (configurable via `SERVER_PORT`)
+- **API timeout**: Configurable via `API_TIMEOUT` (default: 60 seconds)
+- **Image download timeout**: Configurable via `IMAGE_DOWNLOAD_TIMEOUT` (default: 30 seconds)
+- **Flask port**: Configurable via `FLASK_PORT` (default: 9528)
+- **Server port**: Configurable via `SERVER_PORT` (default: 9528)
 
 ### Server Configuration Notes
 
 **FLASK_HOST vs SERVER_HOST:**
 - `FLASK_HOST`: Controls which network interface Flask binds to (e.g., "0.0.0.0" for all interfaces, "127.0.0.1" for localhost only)
+- `FLASK_PORT`: Port for Flask server to bind to (default: 9528)
 - `SERVER_HOST`: Used in generated image URLs (e.g., "localhost", "192.168.1.100", "yourdomain.com")
+- `SERVER_PORT`: Port used in generated image URLs (default: 9528)
 
 **Example configurations:**
-- **Local development**: `FLASK_HOST=127.0.0.1`, `SERVER_HOST=localhost`
-- **Network accessible**: `FLASK_HOST=0.0.0.0`, `SERVER_HOST=192.168.1.100`
-- **Production**: `FLASK_HOST=0.0.0.0`, `SERVER_HOST=yourdomain.com`
+- **Local development**: `FLASK_HOST=127.0.0.1`, `FLASK_PORT=9528`, `SERVER_HOST=localhost`, `SERVER_PORT=9528`
+- **Network accessible**: `FLASK_HOST=0.0.0.0`, `FLASK_PORT=9528`, `SERVER_HOST=192.168.1.100`, `SERVER_PORT=9528`
+- **Production**: `FLASK_HOST=0.0.0.0`, `FLASK_PORT=9528`, `SERVER_HOST=yourdomain.com`, `SERVER_PORT=443`
+- **Custom port**: `FLASK_HOST=0.0.0.0`, `FLASK_PORT=5000`, `SERVER_HOST=localhost`, `SERVER_PORT=5000`
 
 ## File Structure
 ```
