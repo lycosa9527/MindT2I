@@ -86,15 +86,15 @@ async def generate_image(request: ImageGenerationRequest):
     "/generate-image-text",
     response_class=PlainTextResponse,
     tags=["Image Generation"],
-    summary="Generate image and return plain text URL",
-    description="Generate an image and return only the markdown image syntax as plain text"
+    summary="Generate image and return markdown format",
+    description="Generate an image and return markdown image syntax as plain text"
 )
 async def generate_image_text(request: ImageGenerationRequest):
     """
-    Generate image and return plain text markdown syntax
+    Generate image and return markdown syntax for easy embedding
     
-    This endpoint returns only the markdown image syntax as plain text,
-    which is useful for direct embedding in markdown editors.
+    This endpoint returns the markdown image syntax as plain text,
+    which is useful for direct embedding in markdown editors or chat applications.
     
     - **prompt**: Text description for image generation (required)
     - **size**: Image size, e.g., "1328*1328" (optional, default: "1328*1328")
@@ -102,7 +102,7 @@ async def generate_image_text(request: ImageGenerationRequest):
     - **negative_prompt**: Negative prompt to avoid certain elements (optional)
     - **prompt_extend**: Auto-extend/enhance prompt (optional, default: true)
     
-    Returns plain text: ![](http://server:port/temp_images/filename.jpg)
+    Returns markdown format: ![](http://server:port/temp_images/filename.jpg)
     """
     try:
         logger.info(f"Plain text image generation request - Prompt: {request.prompt[:50]}...")
@@ -115,10 +115,10 @@ async def generate_image_text(request: ImageGenerationRequest):
             prompt_extend=request.prompt_extend
         )
         
-        # Return only the plain text URL (user preference per memory)
-        plain_text = result['image_url']
+        # Return markdown format for easy embedding
+        markdown = result['markdown_image']
         
-        return PlainTextResponse(content=plain_text)
+        return PlainTextResponse(content=markdown)
         
     except ValueError as e:
         logger.warning(f"Validation error: {e}")
@@ -166,16 +166,16 @@ async def debug_page(request: Request):
     "/generate-video",
     tags=["Video Generation"],
     summary="Generate video from text prompt (plain text output)",
-    description="Generate a video using DashScope VideoSynthesis API with plain text output for DingTalk"
+    description="Generate a video using DashScope VideoSynthesis API with user-friendly download message"
 )
 async def generate_video_text(request: ImageGenerationRequest):
     """
-    Generate video from text prompt with plain text output for DingTalk.
+    Generate video from text prompt with plain text output.
     
     - **prompt**: Text description for video generation (required)
     - **size**: Video size (optional, auto-mapped from image size)
     
-    Returns plain text format: [video-download link][url]
+    Returns: "Please copy the link to your web browser to download the video, video URL: [url]"
     """
     try:
         logger.info(f"Video generation request - Prompt: {request.prompt[:50]}...")
@@ -190,9 +190,9 @@ async def generate_video_text(request: ImageGenerationRequest):
             force_type="video"  # Force video generation
         )
         
-        # Return plain text format for DingTalk
+        # Return user-friendly message with download link
         video_url = result.get('url')
-        plain_text = f"[video-download link][{video_url}]"
+        plain_text = f"Please copy the link to your web browser to download the video, video URL: {video_url}"
         
         return PlainTextResponse(
             content=plain_text,

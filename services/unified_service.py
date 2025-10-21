@@ -214,10 +214,8 @@ class UnifiedGenerationService:
             
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             
-            # For video, return plain text format for DingTalk compatibility
-            # Format: [topic video-download link][download url]
-            # Use DashScope URL for now (user will decide later if they want local URL)
-            plain_text = f"[video-download link][{dashscope_video_url}]"
+            # User-friendly message for video download
+            plain_text = f"Please copy the link to your web browser to download the video, video URL: {dashscope_video_url}"
             
             return {
                 'success': True,
@@ -225,7 +223,8 @@ class UnifiedGenerationService:
                 'url': dashscope_video_url,  # DashScope URL (valid 24h)
                 'local_url': local_video_url,  # Local server URL (permanent)
                 'filename': filename,
-                'text': plain_text,  # Plain text format for DingTalk
+                'text': plain_text,  # User-friendly download message
+                'message': plain_text,  # Alias for compatibility
                 'markdown': f'<video src="{local_video_url}" controls></video>',  # Use local URL for web display
                 'size': video_size,
                 'duration': config.VIDEO_DEFAULT_DURATION,  # From config
