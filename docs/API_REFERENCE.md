@@ -152,7 +152,8 @@ Automatically detects whether to generate image or video based on prompt.
   "url": "https://dashscope-result-sh.oss-cn-shanghai.aliyuncs.com/video.mp4",
   "local_url": "http://localhost:9528/temp_videos/generated_20251022_123456_abc123.mp4",
   "filename": "generated_20251022_123456_abc123.mp4",
-  "text": "[video-download link][https://dashscope-result-sh.oss-cn-shanghai.aliyuncs.com/video.mp4]",
+  "text": "Please copy the link to your web browser to download the video, video URL: https://dashscope-result-sh.oss-cn-shanghai.aliyuncs.com/video.mp4",
+  "message": "Please copy the link to your web browser to download the video, video URL: https://dashscope-result-sh.oss-cn-shanghai.aliyuncs.com/video.mp4",
   "markdown": "<video src='http://localhost:9528/temp_videos/generated_20251022_123456_abc123.mp4' controls></video>",
   "size": "1920*1080",
   "duration": 10,
@@ -170,6 +171,10 @@ Automatically detects whether to generate image or video based on prompt.
 }
 ```
 
+**Note**: The `text` and `message` fields contain the same user-friendly download instruction.
+
+---
+
 **Intent Detection Keywords**:
 - **Video**: video, videos, animation, clip, movie, film, 视频, 影片, 动画
 - **Image**: image, picture, photo, pic, illustration, 图片, 图像, 照片, 画, 图
@@ -177,15 +182,32 @@ Automatically detects whether to generate image or video based on prompt.
 
 ---
 
-### 4. Force Image Generation
+### 4. Force Image Generation (JSON Format)
 
-Generate an image without intent detection.
+Generate an image without intent detection. Returns full JSON with metadata.
 
 **Endpoint**: `POST /generate-image`
 
 **Request Body**: Same as `/generate`
 
-**Response**: Same as image response from `/generate` (without intent_analysis)
+**Response** (JSON):
+```json
+{
+  "success": true,
+  "image_url": "http://localhost:9528/temp_images/generated_20251022_123456_abc123.jpg",
+  "markdown_image": "![](http://localhost:9528/temp_images/generated_20251022_123456_abc123.jpg)",
+  "message": "Image generated successfully",
+  "filename": "generated_20251022_123456_abc123.jpg",
+  "size": "1280*1280",
+  "prompt_enhanced": true,
+  "original_prompt": "生成学生在教室和猫玩的素材图片",
+  "enhanced_prompt": "A group of diverse students...",
+  "timestamp": "20251022_123456",
+  "request_id": "550e8400-e29b-41d4-a716-446655440000"
+}
+```
+
+**Note**: Returns full JSON object. For plain text output (DingTalk/chat integration), use `/generate-image-text` instead.
 
 ---
 
