@@ -208,9 +208,22 @@ async def generate_video_text(request: ImageGenerationRequest):
             force_type="video"  # Force video generation
         )
         
+        logger.info("=" * 80)
+        logger.info("/generate-video ENDPOINT - PLAIN TEXT RESPONSE")
+        logger.info("=" * 80)
+        logger.info(f"Result from unified_service:")
+        logger.info(f"  type: {result.get('type')}")
+        logger.info(f"  url: {result.get('url')}")
+        logger.info(f"  text: {result.get('text')}")
+        logger.info(f"  message: {result.get('message')}")
+        logger.info(f"  filename: {result.get('filename')}")
+        
         # Return user-friendly message with download link
         video_url = result.get('url')
         plain_text = f"Please copy the link to your web browser to download the video, video URL: {video_url}"
+        
+        logger.info(f"Returning plain text: {plain_text[:150]}...")
+        logger.info("=" * 80)
         
         return PlainTextResponse(
             content=plain_text,
