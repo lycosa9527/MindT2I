@@ -5,6 +5,40 @@ All notable changes to MindT2I will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.1] - 2025-10-22
+
+### Fixed
+- **Output Format Consistency**: All endpoints now return consistent plain text format
+  - `/generate-image-text`: Returns markdown format `![]({image_url})` (matches MindGraph)
+  - `/generate-video`: Returns user-friendly message "Please copy the link to your web browser to download the video, video URL: {url}"
+  - `/generate` (intelligent): Now returns plain text instead of JSON
+    - For images: Returns `![]({image_url})`
+    - For videos: Returns download message
+  - Error responses also return plain text for consistency
+  - Better integration with DingTalk and other chat platforms
+
+### Changed
+- **Enhanced Logging**: Added comprehensive logging for prompt enhancement workflow
+  - Qwen Turbo enhancement shows original and enhanced prompts
+  - Image generation logs show final prompt sent to API
+  - Video generation logs include all parameters and API-level enhancements
+  - Full traceability from user input to final output
+
+### Documentation
+- **API Reference**: Created comprehensive `docs/API_REFERENCE.md` (875 lines)
+  - Complete API documentation with examples
+  - DashScope integration patterns
+  - Request/response formats
+  - Error handling guide
+  - Best practices
+
+- **Code Review**: Created detailed `docs/CODE_REVIEW.md` (1047 lines)
+  - 40+ improvement recommendations
+  - Priority-based implementation roadmap
+  - Performance optimization opportunities
+  - Testing strategy
+  - Architecture enhancements
+
 ## [2.2.0] - 2025-10-22
 
 ### Added
