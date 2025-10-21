@@ -189,18 +189,20 @@ Generate an image without intent detection.
 
 ---
 
-### 5. Force Image Generation (Plain Text)
+### 5. Force Image Generation (Plain Text - DingTalk Format)
 
-Generate an image and return only the URL as plain text.
+Generate an image and return markdown format for DingTalk/chat integration.
 
 **Endpoint**: `POST /generate-image-text`
 
 **Request Body**: Same as `/generate`
 
-**Response** (plain text):
+**Response** (plain text, markdown format):
 ```
-http://localhost:9528/temp_images/generated_20251022_123456_abc123.jpg
+![](http://localhost:9528/temp_images/generated_20251022_123456_abc123.jpg)
 ```
+
+**Note**: Returns plain text in markdown image format `![](url)`, matching MindGraph's `generate_dingtalk` format. Use this for DingTalk/chat bot integration, NOT `/generate-image` which returns JSON.
 
 ---
 
@@ -212,10 +214,12 @@ Generate a video without intent detection.
 
 **Request Body**: Same as `/generate`
 
-**Response** (plain text, DingTalk format):
+**Response** (plain text, user-friendly format):
 ```
-[video-download link][https://dashscope-result-sh.oss-cn-shanghai.aliyuncs.com/video.mp4]
+Please copy the link to your web browser to download the video, video URL: https://dashscope-result-sh.oss-cn-shanghai.aliyuncs.com/video.mp4
 ```
+
+**Note**: This endpoint returns plain text, not JSON. For DingTalk/chat integration.
 
 ---
 
