@@ -57,6 +57,15 @@ async def generate_image(request: ImageGenerationRequest):
             prompt_extend=request.prompt_extend
         )
         
+        logger.info("=" * 80)
+        logger.info("/generate-image ENDPOINT - RESPONSE")
+        logger.info("=" * 80)
+        logger.info(f"Result from image_service:")
+        logger.info(f"  image_url: {result.get('image_url')}")
+        logger.info(f"  markdown_image: {result.get('markdown_image')}")
+        logger.info(f"  filename: {result.get('filename')}")
+        logger.info("=" * 80)
+        
         return ImageGenerationResponse(**result)
         
     except ValueError as e:
@@ -115,8 +124,17 @@ async def generate_image_text(request: ImageGenerationRequest):
             prompt_extend=request.prompt_extend
         )
         
+        logger.info("=" * 80)
+        logger.info("/generate-image-text ENDPOINT - PLAIN TEXT RESPONSE")
+        logger.info("=" * 80)
+        logger.info(f"Result from image_service:")
+        logger.info(f"  image_url: {result.get('image_url')}")
+        logger.info(f"  markdown_image: {result.get('markdown_image')}")
+        
         # Return markdown format for easy embedding
         markdown = result['markdown_image']
+        logger.info(f"Returning plain text: {markdown}")
+        logger.info("=" * 80)
         
         return PlainTextResponse(content=markdown)
         

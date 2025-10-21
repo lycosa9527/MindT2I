@@ -143,14 +143,25 @@ class ImageGenerationService:
         server_url = config.SERVER_URL
         full_image_url = f"{server_url}/temp_images/{filename}"
         
+        logger.info("=" * 80)
+        logger.info("IMAGE SERVICE - RESPONSE CONSTRUCTION")
+        logger.info("=" * 80)
+        logger.info(f"SERVER_URL from config: {server_url}")
+        logger.info(f"Filename: {filename}")
+        logger.info(f"Full image URL: {full_image_url}")
+        
         # Generate timestamp
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        
+        # Create markdown format
+        markdown_format = f"![]({full_image_url})"
+        logger.info(f"Markdown format: {markdown_format}")
         
         # Create response
         result = {
             'success': True,
             'image_url': full_image_url,
-            'markdown_image': f"![]({full_image_url})",
+            'markdown_image': markdown_format,
             'message': 'Image generated successfully',
             'filename': filename,
             'size': size,
@@ -160,6 +171,14 @@ class ImageGenerationService:
             'timestamp': timestamp,
             'request_id': str(uuid.uuid4())
         }
+        
+        logger.info("-" * 80)
+        logger.info(f"Result dict created:")
+        logger.info(f"  success: {result['success']}")
+        logger.info(f"  image_url: {result['image_url']}")
+        logger.info(f"  markdown_image: {result['markdown_image']}")
+        logger.info(f"  filename: {result['filename']}")
+        logger.info("=" * 80)
         
         logger.info(f"Image generation completed - Filename: {filename}, Size: {size}")
         return result
