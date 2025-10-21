@@ -152,8 +152,8 @@ Automatically detects whether to generate image or video based on prompt.
   "url": "https://dashscope-result-sh.oss-cn-shanghai.aliyuncs.com/video.mp4",
   "local_url": "http://localhost:9528/temp_videos/generated_20251022_123456_abc123.mp4",
   "filename": "generated_20251022_123456_abc123.mp4",
-  "text": "Please copy the link to your web browser to download the video, video URL: https://dashscope-result-sh.oss-cn-shanghai.aliyuncs.com/video.mp4",
-  "message": "Please copy the link to your web browser to download the video, video URL: https://dashscope-result-sh.oss-cn-shanghai.aliyuncs.com/video.mp4",
+  "text": "请将链接复制到浏览器下载视频，视频链接: https://dashscope-result-sh.oss-cn-shanghai.aliyuncs.com/video.mp4",
+  "message": "请将链接复制到浏览器下载视频，视频链接: https://dashscope-result-sh.oss-cn-shanghai.aliyuncs.com/video.mp4",
   "markdown": "<video src='http://localhost:9528/temp_videos/generated_20251022_123456_abc123.mp4' controls></video>",
   "size": "1920*1080",
   "duration": 10,
@@ -236,12 +236,12 @@ Generate a video without intent detection.
 
 **Request Body**: Same as `/generate`
 
-**Response** (plain text, user-friendly format):
+**Response** (plain text, user-friendly format in Chinese):
 ```
-Please copy the link to your web browser to download the video, video URL: https://dashscope-result-sh.oss-cn-shanghai.aliyuncs.com/video.mp4
+请将链接复制到浏览器下载视频，视频链接: https://dashscope-result-sh.oss-cn-shanghai.aliyuncs.com/video.mp4
 ```
 
-**Note**: This endpoint returns plain text, not JSON. For DingTalk/chat integration.
+**Note**: This endpoint returns plain text in Chinese, not JSON. For DingTalk/chat integration.
 
 ---
 

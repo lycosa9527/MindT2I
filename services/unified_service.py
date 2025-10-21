@@ -214,8 +214,8 @@ class UnifiedGenerationService:
             
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             
-            # User-friendly message for video download
-            plain_text = f"Please copy the link to your web browser to download the video, video URL: {dashscope_video_url}"
+            # User-friendly message for video download (in Chinese)
+            plain_text = f"请将链接复制到浏览器下载视频，视频链接: {dashscope_video_url}"
             
             return {
                 'success': True,

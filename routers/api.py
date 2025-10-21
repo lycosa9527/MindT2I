@@ -188,12 +188,12 @@ async def debug_page(request: Request):
 )
 async def generate_video_text(request: ImageGenerationRequest):
     """
-    Generate video from text prompt with plain text output.
+    Generate video from text prompt with plain text output (Chinese).
     
     - **prompt**: Text description for video generation (required)
     - **size**: Video size (optional, auto-mapped from image size)
     
-    Returns: "Please copy the link to your web browser to download the video, video URL: [url]"
+    Returns: "请将链接复制到浏览器下载视频，视频链接: [url]"
     """
     try:
         logger.info(f"Video generation request - Prompt: {request.prompt[:50]}...")
@@ -215,9 +215,9 @@ async def generate_video_text(request: ImageGenerationRequest):
         logger.info(f"Result type: {type(result)}")
         logger.info(f"Full result dict: {result}")
         
-        # Return user-friendly message with download link
+        # Return user-friendly message with download link (in Chinese)
         video_url = result.get('url')
-        plain_text = f"Please copy the link to your web browser to download the video, video URL: {video_url}"
+        plain_text = f"请将链接复制到浏览器下载视频，视频链接: {video_url}"
         
         logger.info("-" * 80)
         logger.info("SENDING RESPONSE TO CLIENT")
