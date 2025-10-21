@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>MindT2I - Image Generator</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <style>
+        /* Reset and Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: #2d3748;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        /* Container and Layout */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .main-card {
+            background: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+            margin-bottom: 2rem;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2.5rem 2rem;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.025em;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            font-weight: 300;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 2.5rem 2rem;
+        }
+
+        /* Form Elements */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            color: #4a5568;
+            margin-bottom: 0.5rem;
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 1rem 1.25rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-family: inherit;
+            transition: all 0.2s ease;
+            background: #fafbfc;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #667eea;
+            background: #ffffff;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        textarea.form-control {
+            min-height: 100px;
+            resize: vertical;
+            line-height: 1.5;
+        }
+
+        select.form-control {
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+            background-position: right 0.75rem center;
+            background-repeat: no-repeat;
+            background-size: 1.5em 1.5em;
+            padding-right: 2.5rem;
+        }
+
+        /* Form Row Layout */
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        /* Button Styles */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem 2rem;
+            font-size: 1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            font-family: inherit;
+            min-height: 3rem;
+            width: 100%;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-primary:disabled {
+            background: #cbd5e0;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* Status Messages */
+        .status-message {
+            padding: 1rem 1.25rem;
+            border-radius: 12px;
+            margin: 1rem 0;
+            font-weight: 500;
+            display: none;
+        }
+
+        .status-info {
+            background: #ebf8ff;
+            color: #2b6cb0;
+            border: 1px solid #bee3f8;
+        }
+
+        .status-error {
+            background: #fed7d7;
+            color: #c53030;
+            border: 1px solid #feb2b2;
+        }
+
+        .status-success {
+            background: #f0fff4;
+            color: #2f855a;
+            border: 1px solid #c6f6d5;
+        }
+
+        /* Results Display */
+        .result-container {
+            margin-top: 2rem;
+            display: none;
+        }
+
+        .result-container.active {
+            display: block !important;
+        }
+
+        .image-container {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 1.5rem;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .image-container img,
+        .image-container video {
+            max-width: 100%;
+            height: auto;
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .image-container img {
+            cursor: pointer;
+        }
+
+        .image-container img:hover {
+            transform: scale(1.02);
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.15);
+        }
+
+        .image-container video {
+            cursor: default;
+        }
+
+        .image-container img.expanded {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(1.5);
+            z-index: 1000;
+            background: white;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            cursor: zoom-out;
+            border-radius: 16px;
+            max-height: 90vh;
+            max-width: 90vw;
+        }
+
+        .image-note {
+            margin-top: 1rem;
+            padding: 0.75rem 1rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            text-align: center;
+        }
+
+        .image-controls {
+            margin-top: 1rem;
+            display: flex;
+            gap: 0.5rem;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .image-controls button {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .btn-download {
+            background: #48bb78;
+            color: white;
+        }
+
+        .btn-download:hover {
+            background: #38a169;
+        }
+
+        .btn-open {
+            background: #4299e1;
+            color: white;
+        }
+
+        .btn-open:hover {
+            background: #3182ce;
+        }
+
+        .btn-copy {
+            background: #ed8936;
+            color: white;
+        }
+
+        .btn-copy:hover {
+            background: #dd6b20;
+        }
+
+        /* History Display */
+        .history-container {
+            margin-top: 1rem;
+        }
+
+        .history-title {
+            margin-bottom: 0.5rem;
+            color: #4a5568;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .history-item {
+            margin: 4px 0;
+            font-size: 0.9rem;
+        }
+
+        .history-item a {
+            color: #667eea;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+
+        .history-item a:hover {
+            color: #764ba2;
+        }
+
+        .history-item span {
+            color: #888;
+            font-size: 0.8em;
+            margin-left: 8px;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            .header {
+                padding: 2rem 1.5rem;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .content {
+                padding: 2rem 1.5rem;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Loading States */
+        .loading {
+            opacity: 0.7;
+            pointer-events: none;
+        }
+
+        .loading .btn-primary {
+            background: #cbd5e0;
+        }
+
+        /* Smooth Transitions */
+        .fade-in {
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Example prompts */
+        .examples {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: #f7fafc;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .examples-title {
+            font-weight: 600;
+            color: #4a5568;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .example-item {
+            margin: 0.25rem 0;
+            font-size: 0.85rem;
+            color: #667eea;
+            cursor: pointer;
+            padding: 0.25rem 0;
+        }
+
+        .example-item:hover {
+            color: #764ba2;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="main-card">
+            <div class="header">
+                <h1>MindT2I</h1>
+                <p>AI-Powered Image & Video Generation</p>
+            </div>
+            
+            <div class="content">
+                <div class="form-group">
+                    <label for="prompt">Prompt (say "video" or "image" to specify)</label>
+                    <textarea id="prompt" class="form-control" placeholder="Describe what you want to create... (e.g., 'Generate a video of cats playing' or 'Create a picture of sunset')"></textarea>
+                    <div style="margin-top: 0.5rem; font-size: 0.85rem; color: #6b7280;">
+                        Size and watermark settings are configured in .env file
+                    </div>
+                </div>
+                
+                <button id="generateBtn" class="btn btn-primary">
+                    Generate (Auto-detect)
+                </button>
+                
+                <div id="infoMsg" class="status-message status-info"></div>
+                <div id="errorMsg" class="status-message status-error"></div>
+                
+                <div class="examples">
+                    <div class="examples-title">Example Prompts (click to use):</div>
+                    <div class="example-item" data-prompt="Generate a video of cats playing in the garden">Video: Cats Playing</div>
+                    <div class="example-item" data-prompt="Create a picture of sunset over mountains">Image: Mountain Sunset</div>
+                    <div class="example-item" data-prompt="Generate a video of birds flying in the sky">Video: Birds Flying</div>
+                    <div class="example-item" data-prompt="一副典雅庄重的对联悬挂于厅堂之中，房间是个安静古典的中式布置">Image: 中式对联场景</div>
+                    <div class="example-item" data-prompt="A serene Japanese garden with cherry blossoms and koi pond">Image: 日本庭院风景</div>
+                </div>
+                
+                <div class="history-container" id="historyBox"></div>
+                
+                <div class="result-container" id="imageResult"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const generateBtn = document.getElementById('generateBtn');
+        const promptBox = document.getElementById('prompt');
+        const imageResult = document.getElementById('imageResult');
+        const errorMsg = document.getElementById('errorMsg');
+        const infoMsg = document.getElementById('infoMsg');
+        const historyBox = document.getElementById('historyBox');
+        
+        // History logic
+        let history = JSON.parse(localStorage.getItem('mindt2i_history') || '[]');
+        
+        function saveHistory(prompt) {
+            if (!prompt.trim()) return;
+            history = history.filter(h => h.prompt !== prompt);
+            history.unshift({prompt, timestamp: Date.now()});
+            if (history.length > 10) history = history.slice(0, 10);
+            localStorage.setItem('mindt2i_history', JSON.stringify(history));
+            renderHistory();
+        }
+        
+        function renderHistory() {
+            if (!history.length) { 
+                historyBox.innerHTML = ''; 
+                return; 
+            }
+            
+            const historyTitle = document.createElement('div');
+            historyTitle.className = 'history-title';
+            historyTitle.textContent = 'Recent Prompts:';
+            
+            const historyList = history.map((h, i) => {
+                const item = document.createElement('div');
+                item.className = 'history-item';
+                
+                const link = document.createElement('a');
+                link.href = '#';
+                link.textContent = h.prompt.substring(0, 80) + (h.prompt.length > 80 ? '...' : '');
+                link.onclick = (e) => {
+                    e.preventDefault();
+                    promptBox.value = h.prompt;
+                };
+                
+                item.appendChild(link);
+                
+                return item;
+            });
+            
+            historyBox.innerHTML = '';
+            historyBox.appendChild(historyTitle);
+            historyList.forEach(item => historyBox.appendChild(item));
+        }
+        
+        renderHistory();
+        
+        // Example prompts
+        document.querySelectorAll('.example-item').forEach(item => {
+            item.addEventListener('click', () => {
+                promptBox.value = item.dataset.prompt;
+                promptBox.focus();
+            });
+        });
+        
+        // Status messages
+        function showError(msg) {
+            errorMsg.textContent = msg;
+            errorMsg.style.display = msg ? 'block' : 'none';
+            if (msg) {
+                errorMsg.classList.add('fade-in');
+            }
+        }
+        
+        function showInfo(msg) {
+            infoMsg.textContent = msg;
+            infoMsg.style.display = msg ? 'block' : 'none';
+            if (msg) {
+                infoMsg.classList.add('fade-in');
+            }
+        }
+        
+        function showImage(imageUrl, metadata) {
+            imageResult.style.display = 'block';
+            imageResult.classList.add('active');
+            
+            const container = document.createElement('div');
+            container.className = 'image-container fade-in';
+            
+            const isVideo = metadata.type === 'video' || imageUrl.includes('.mp4') || imageUrl.includes('video');
+            
+            if (isVideo) {
+                // Create video element
+                const video = document.createElement('video');
+                video.src = imageUrl;
+                video.controls = true;
+                video.autoplay = true;
+                video.loop = true;
+                video.style.maxWidth = '100%';
+                video.style.borderRadius = '12px';
+                container.appendChild(video);
+            } else {
+                // Create image element
+                const img = document.createElement('img');
+                img.src = imageUrl;
+                img.alt = 'Generated image';
+                
+                // Add click-to-expand functionality
+                img.addEventListener('click', function() {
+                    if (this.classList.contains('expanded')) {
+                        this.classList.remove('expanded');
+                        document.body.style.overflow = '';
+                    } else {
+                        this.classList.add('expanded');
+                        document.body.style.overflow = 'hidden';
+                    }
+                });
+                
+                // Add escape key support for expanded image
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape' && img.classList.contains('expanded')) {
+                        img.classList.remove('expanded');
+                        document.body.style.overflow = '';
+                    }
+                });
+                
+                container.appendChild(img);
+            }
+            
+            // Add controls
+            const controls = document.createElement('div');
+            controls.className = 'image-controls';
+            
+            // Download button
+            const downloadBtn = document.createElement('button');
+            downloadBtn.className = 'btn-download';
+            downloadBtn.textContent = isVideo ? 'Download Video' : 'Download Image';
+            downloadBtn.onclick = () => {
+                const a = document.createElement('a');
+                a.href = imageUrl;
+                a.download = metadata.filename || (isVideo ? 'generated-video.mp4' : 'generated-image.jpg');
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            };
+            
+            // Open in new tab button
+            const openBtn = document.createElement('button');
+            openBtn.className = 'btn-open';
+            openBtn.textContent = 'Open in New Tab';
+            openBtn.onclick = () => {
+                window.open(imageUrl, '_blank');
+            };
+            
+            // Copy URL button
+            const copyBtn = document.createElement('button');
+            copyBtn.className = 'btn-copy';
+            copyBtn.textContent = 'Copy URL';
+            copyBtn.onclick = async () => {
+                try {
+                    await navigator.clipboard.writeText(imageUrl);
+                    const originalText = copyBtn.textContent;
+                    copyBtn.textContent = 'Copied!';
+                    setTimeout(() => {
+                        copyBtn.textContent = originalText;
+                    }, 2000);
+                } catch (err) {
+                    console.error('Failed to copy:', err);
+                }
+            };
+            
+            controls.appendChild(downloadBtn);
+            controls.appendChild(openBtn);
+            controls.appendChild(copyBtn);
+            container.appendChild(controls);
+            
+            // Add metadata note
+            const note = document.createElement('div');
+            note.className = 'image-note';
+            const mediaType = isVideo ? 'Video' : 'Image';
+            let noteText = `<strong>${mediaType} Generated Successfully</strong>`;
+            if (metadata.prompt_enhanced) {
+                noteText += ' (Prompt enhanced)';
+            }
+            if (metadata.type) {
+                noteText += ` • Type: ${metadata.type.toUpperCase()}`;
+            }
+            if (metadata.confidence) {
+                noteText += ` • Confidence: ${(metadata.confidence * 100).toFixed(0)}%`;
+            }
+            noteText += `<br>Size: ${metadata.size || 'default'}`;
+            if (metadata.filename) {
+                noteText += ` • File: ${metadata.filename}`;
+            }
+            if (metadata.reasoning) {
+                noteText += `<br><small>Reasoning: ${metadata.reasoning}</small>`;
+            }
+            note.innerHTML = noteText;
+            container.appendChild(note);
+            
+            imageResult.innerHTML = '';
+            imageResult.appendChild(container);
+        }
+        
+        // Generate button handler
+        generateBtn.onclick = async function() {
+            const prompt = promptBox.value.trim();
+            
+            if (!prompt) {
+                showError('Please enter a prompt');
+                return;
+            }
+            
+            showError('');
+            showInfo('Generating... This may take 30-90 seconds...');
+            imageResult.style.display = 'none';
+            imageResult.classList.remove('active');
+            
+            generateBtn.disabled = true;
+            generateBtn.textContent = 'Generating...';
+            
+            try {
+                // Use the intelligent /generate endpoint
+                // Size and watermark will use defaults from .env
+                const response = await fetch('/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        prompt: prompt
+                    })
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || error.detail?.error || 'Generation failed');
+                }
+                
+                const result = await response.json();
+                
+                // Handle both image and video responses
+                const mediaUrl = result.image_url || result.video_url || result.url;
+                const mediaType = result.type || (result.video_url ? 'video' : 'image');
+                
+                showImage(mediaUrl, {
+                    type: mediaType,
+                    filename: result.filename,
+                    size: result.size,
+                    prompt_enhanced: result.prompt_enhanced,
+                    confidence: result.intent_analysis?.confidence,
+                    reasoning: result.intent_analysis?.reasoning
+                });
+                
+                showInfo('');
+                saveHistory(prompt);
+                
+            } catch (error) {
+                console.error('Generation error:', error);
+                showError('Generation failed: ' + error.message);
+                showInfo('');
+            } finally {
+                generateBtn.disabled = false;
+                generateBtn.textContent = 'Generate (Auto-detect)';
+            }
+        };
+        
+        // Enter key to generate
+        promptBox.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && e.ctrlKey) {
+                generateBtn.click();
+            }
+        });
+        
+        console.log('MindT2I Debug Page Ready!');
+        console.log('Press Ctrl+Enter in prompt box to generate');
+    </script>
+</body>
+</html>
+

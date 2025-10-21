@@ -1,0 +1,269 @@
+"""
+API Router for MindT2I
+======================
+
+Handles image generation API endpoints.
+"""
+
+import logging
+from fastapi import APIRouter, HTTPException, Response, Request
+from fastapi.responses import PlainTextResponse, HTMLResponse
+from fastapi.templating import Jinja2Templates
+
+from models.requests import ImageGenerationRequest
+from models.responses import ImageGenerationResponse, ErrorResponse
+from services.image_service import image_service
+from services.unified_service import unified_service
+
+logger = logging.getLogger(__name__)
+
+router = APIRouter()
+
+# Initialize Jinja2 templates
+templates = Jinja2Templates(directory="templates")
+
+
+@router.post(
+    "/generate-image",
+    response_model=ImageGenerationResponse,
+    responses={
+        400: {"model": ErrorResponse},
+        500: {"model": ErrorResponse}
+    },
+    tags=["Image Generation"],
+    summary="Generate image from text prompt",
+    description="Generate an image using Qwen Image Plus via DashScope MultiModal API"
+)
+async def generate_image(request: ImageGenerationRequest):
+    """
+    Generate image from text prompt
+    
+    - **prompt**: Text description for image generation (required)
+    - **size**: Image size, e.g., "1328*1328" (optional, default: "1328*1328")
+    - **watermark**: Add watermark to image (optional, default: false)
+    - **negative_prompt**: Negative prompt to avoid certain elements (optional)
+    - **prompt_extend**: Auto-extend/enhance prompt (optional, default: true)
+    
+    Returns the generated image URL and metadata.
+    """
+    try:
+        logger.info(f"Image generation request - Prompt: {request.prompt[:50]}...")
+        
+        result = await image_service.generate_image(
+            prompt=request.prompt,
+            size=request.size,
+            watermark=request.watermark,
+            negative_prompt=request.negative_prompt,
+            prompt_extend=request.prompt_extend
+        )
+        
+        return ImageGenerationResponse(**result)
+        
+    except ValueError as e:
+        logger.warning(f"Validation error: {e}")
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "success": False,
+                "error": str(e),
+                "error_code": "VALIDATION_ERROR"
+            }
+        )
+    except Exception as e:
+        logger.error(f"Image generation failed: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "success": False,
+                "error": "Failed to generate image",
+                "error_code": "GENERATION_FAILED",
+                "details": str(e)
+            }
+        )
+
+
+@router.post(
+    "/generate-image-text",
+    response_class=PlainTextResponse,
+    tags=["Image Generation"],
+    summary="Generate image and return plain text URL",
+    description="Generate an image and return only the markdown image syntax as plain text"
+)
+async def generate_image_text(request: ImageGenerationRequest):
+    """
+    Generate image and return plain text markdown syntax
+    
+    This endpoint returns only the markdown image syntax as plain text,
+    which is useful for direct embedding in markdown editors.
+    
+    - **prompt**: Text description for image generation (required)
+    - **size**: Image size, e.g., "1328*1328" (optional, default: "1328*1328")
+    - **watermark**: Add watermark to image (optional, default: false)
+    - **negative_prompt**: Negative prompt to avoid certain elements (optional)
+    - **prompt_extend**: Auto-extend/enhance prompt (optional, default: true)
+    
+    Returns plain text: ![](http://server:port/temp_images/filename.jpg)
+    """
+    try:
+        logger.info(f"Plain text image generation request - Prompt: {request.prompt[:50]}...")
+        
+        result = await image_service.generate_image(
+            prompt=request.prompt,
+            size=request.size,
+            watermark=request.watermark,
+            negative_prompt=request.negative_prompt,
+            prompt_extend=request.prompt_extend
+        )
+        
+        # Return only the plain text URL (user preference per memory)
+        plain_text = result['image_url']
+        
+        return PlainTextResponse(content=plain_text)
+        
+    except ValueError as e:
+        logger.warning(f"Validation error: {e}")
+        return PlainTextResponse(
+            content=f"Error: {str(e)}",
+            status_code=400
+        )
+    except Exception as e:
+        logger.error(f"Image generation failed: {e}", exc_info=True)
+        return PlainTextResponse(
+            content=f"Error: Failed to generate image - {str(e)}",
+            status_code=500
+        )
+
+
+@router.get(
+    "/health",
+    tags=["System"],
+    summary="Health check",
+    description="Check if the API is running"
+)
+async def health_check():
+    """Health check endpoint"""
+    from config.settings import config
+    return {
+        "status": "healthy",
+        "service": "MindT2I",
+        "version": config.VERSION
+    }
+
+
+@router.get(
+    "/debug",
+    response_class=HTMLResponse,
+    tags=["Development"],
+    summary="Debug interface",
+    description="Interactive web interface for testing image generation"
+)
+async def debug_page(request: Request):
+    """Serve the debug/testing interface"""
+    return templates.TemplateResponse("debug.html", {"request": request})
+
+
+@router.post(
+    "/generate-video",
+    tags=["Video Generation"],
+    summary="Generate video from text prompt (plain text output)",
+    description="Generate a video using DashScope VideoSynthesis API with plain text output for DingTalk"
+)
+async def generate_video_text(request: ImageGenerationRequest):
+    """
+    Generate video from text prompt with plain text output for DingTalk.
+    
+    - **prompt**: Text description for video generation (required)
+    - **size**: Video size (optional, auto-mapped from image size)
+    
+    Returns plain text format: [video-download link][url]
+    """
+    try:
+        logger.info(f"Video generation request - Prompt: {request.prompt[:50]}...")
+        
+        # Generate video using unified service (force video type)
+        result = await unified_service.generate(
+            prompt=request.prompt,
+            size=request.size,
+            watermark=request.watermark,
+            negative_prompt=request.negative_prompt,
+            prompt_extend=request.prompt_extend,
+            force_type="video"  # Force video generation
+        )
+        
+        # Return plain text format for DingTalk
+        video_url = result.get('url')
+        plain_text = f"[video-download link][{video_url}]"
+        
+        return PlainTextResponse(
+            content=plain_text,
+            status_code=200
+        )
+        
+    except ValueError as e:
+        logger.warning(f"Validation error: {e}")
+        return PlainTextResponse(
+            content=f"Error: Invalid request - {str(e)}",
+            status_code=400
+        )
+    except Exception as e:
+        logger.error(f"Video generation failed: {e}", exc_info=True)
+        return PlainTextResponse(
+            content=f"Error: Failed to generate video - {str(e)}",
+            status_code=500
+        )
+
+
+@router.post(
+    "/generate",
+    tags=["Intelligent Generation"],
+    summary="Intelligent image/video generation",
+    description="Uses ReAct agent to automatically determine if user wants image or video, then generates accordingly"
+)
+async def generate_intelligent(request: ImageGenerationRequest):
+    """
+    Intelligent generation endpoint with ReAct agent.
+    
+    The agent analyzes your prompt using Qwen-turbo and automatically decides
+    whether to generate an image or video based on motion indicators.
+    
+    Examples:
+    - "一只小猫在月光下奔跑" → VIDEO (motion: running)
+    - "A beautiful sunset over mountains" → IMAGE (static scene)
+    - "狗狗在公园里玩耍" → VIDEO (motion: playing)
+    """
+    try:
+        logger.info(f"Intelligent generation request - Prompt: {request.prompt[:50]}...")
+        
+        result = await unified_service.generate(
+            prompt=request.prompt,
+            size=request.size,
+            watermark=request.watermark,
+            negative_prompt=request.negative_prompt,
+            prompt_extend=request.prompt_extend,
+            force_type="auto"  # Use intelligent detection
+        )
+        
+        return result
+        
+    except ValueError as e:
+        logger.warning(f"Validation error: {e}")
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "success": False,
+                "error": str(e),
+                "error_code": "VALIDATION_ERROR"
+            }
+        )
+    except Exception as e:
+        logger.error(f"Intelligent generation failed: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "success": False,
+                "error": "Failed to generate content",
+                "error_code": "GENERATION_FAILED",
+                "details": str(e)
+            }
+        )
+

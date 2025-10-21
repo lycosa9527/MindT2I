@@ -1,703 +1,521 @@
-# MindT2I - DashScope Image Generation API
+# MindT2I - AI-Powered Text-to-Image Generation API
 
-A Flask-based web application that integrates with Alibaba Cloud's DashScope platform to use Qwen models for text-to-image generation and prompt enhancement.
+🎨 Modern async web application for AI-powered text-to-image generation using FastAPI and DashScope MultiModal API
 
 **Made by MindSpring Team | Author: lycosa9527**
 
-## 🚀 **Features**
+## 🚀 Features
 
-### **Core Functionality**
-- 🎨 **Text-to-Image Generation**: Convert Chinese and English text prompts into high-quality images
-- 🧠 **AI-Powered Prompt Enhancement**: Automatically enhance simple prompts for K12 classroom use using Qwen Turbo via DashScope
-- 🌐 **RESTful API**: Clean, modern API endpoints for easy integration
-- 💾 **Local Storage**: Generated images are saved locally in a temp folder
-- 📱 **Modern UI**: Beautiful, responsive web interface with API documentation
-- ⚡ **Fast**: Optimized for quick image generation and retrieval
-- 📝 **Plain Text Output**: Returns pure plain text markdown image syntax `![](image_url.png)` with no JSON formatting
+### Core Functionality
+- 🎨 **Text-to-Image Generation**: Convert text prompts into high-quality images using wan2.5-t2i-preview
+- 🎬 **Text-to-Video Generation**: Create videos from text using wan2.5-t2v-preview
+- 🧠 **ReAct Agent**: Intelligent agent that automatically detects if you want image or video
+- 💡 **Smart Routing**: Analyzes prompts for motion keywords and routes to appropriate API
+- 🚀 **AI-Powered Enhancement**: Automatically enhance prompts with Qwen Turbo
+- 🌐 **RESTful API**: Clean, modern FastAPI endpoints with automatic OpenAPI documentation
+- 💾 **Local Storage**: Generated images saved locally with automatic cleanup
+- ⚡ **High Performance**: Full async/await support for concurrent requests
+- 📱 **Auto Documentation**: Interactive API docs at `/docs` and `/redoc`
 
-### **Enterprise Features**
-- 🔒 **Enterprise Security**: Rate limiting, input validation, and protection against common attacks
-- 🏥 **Health Monitoring**: Comprehensive system health checks with disk space and resource monitoring
-- 🧹 **Automatic Cleanup**: 24-hour automatic cleanup of old temporary images
+### Enterprise Features
+- 🔒 **Type Safety**: Pydantic models for request/response validation
+- 🏥 **Health Monitoring**: Comprehensive system health checks and metrics
+- 🧹 **Automatic Cleanup**: Configurable cleanup of old temporary images
 - 🌍 **Cross-Platform**: Works on Windows, Linux, and macOS
-- 📊 **Professional Logging**: Clean, structured logging system for production environments
-- ⚙️ **Configuration Management**: Comprehensive environment variable support
-- 🚨 **Error Handling**: Structured error codes and comprehensive error management
+- 📊 **Professional Logging**: Structured, colored logging with multiple levels
+- ⚙️ **Configuration Management**: Environment-based configuration with validation
+- 🚨 **Error Handling**: Structured error responses with proper HTTP status codes
 
-## Prerequisites
+## 📋 Quick Start
 
+### Prerequisites
 - Python 3.8 or higher
 - DashScope API key from Alibaba Cloud
 - Internet connection for API calls
 
-## Installation
+### Installation
 
-1. **Clone the repository**
    ```bash
-   git clone <repository-url>
-   cd MindT2I
-   ```
+# 1. Navigate to project directory
+cd "C:\Users\roywa\Documents\Cursor Projects\MindT2I"
 
-2. **Install dependencies**
-   ```bash
+# 2. Install dependencies
    pip install -r requirements.txt
-   ```
 
-3. **Set environment variables**
-   
-   **Option 1: Using .env file (Recommended)**
-   ```bash
-   # Copy the example environment file
-   cp env.example .env
-   
-   # Edit .env file and add your actual API key
-   # DASHSCOPE_API_KEY=your_actual_api_key_here
-   ```
-   
-   **Option 2: Set directly in terminal**
-   ```bash
-   # Windows PowerShell
-   $env:DASHSCOPE_API_KEY="your_api_key_here"
-   
-   # Windows Command Prompt
-   set DASHSCOPE_API_KEY=your_api_key_here
-   
-   # Linux/macOS
-   export DASHSCOPE_API_KEY="your_api_key_here"
-   ```
+# 3. Configure environment
+copy env.example .env  # Windows
+# cp env.example .env  # Linux/Mac
 
-4. **Run the application**
-   ```bash
-   python app.py
+# Edit .env and set your API key
+# DASHSCOPE_API_KEY=your_api_key_here
+
+# 4. Run the server
+python main.py
    ```
 
 The application will start on `http://localhost:9528`
 
-## API Endpoints
+## 📁 Project Structure
 
-> **💡 Simplified Usage**: The API now supports minimal requests with just `{"prompt": "your text"}`. All other parameters have sensible defaults and are optional.
+```
+MindT2I/
+├── config/                 # Configuration management
+│   ├── __init__.py
+│   └── settings.py        # Centralized config with env variables
+├── clients/               # LLM clients
+│   ├── __init__.py
+│   └── multimodal.py     # DashScope MultiModal & Text clients
+├── models/                # Pydantic models
+│   ├── __init__.py
+│   ├── requests.py       # Request models
+│   └── responses.py      # Response models
+├── routers/               # API routes
+│   ├── __init__.py
+│   └── api.py            # Image generation endpoints
+├── services/              # Business logic
+│   ├── __init__.py
+│   └── image_service.py  # Image generation service
+├── temp_images/           # Generated images (auto-created)
+├── logs/                  # Application logs (auto-created)
+├── main.py               # FastAPI application entry point
+├── requirements.txt      # Python dependencies
+├── env.example          # Environment variables template
+├── test_fastapi.py      # Test suite
+├── QUICKSTART.md        # Quick start guide
+├── MIGRATION_GUIDE.md   # Migration guide
+└── README.md            # This file
+```
 
-### 1. Home Page & Documentation
-- **URL**: `/`
-- **Method**: `GET`
-- **Description**: Interactive API documentation with examples
+## 📡 API Endpoints
 
-## AI-Powered Educational Prompt Enhancement
+### 1. Generate Image (JSON Response)
 
-The application automatically enhances simple prompts using **Qwen Turbo via DashScope** to create detailed, educationally-focused image descriptions specifically designed for K12 classroom use.
+**POST** `/generate-image`
 
-### How It Works
+Generate an image and return detailed JSON response.
 
-1. **User Input**: Teacher provides a simple prompt in Chinese or English (e.g., "一只猫" or "a cat")
-2. **AI Enhancement**: Qwen Turbo via DashScope transforms the prompt with comprehensive educational focus including:
-   - Subject-specific learning elements
-   - Age-appropriate content for K12 students
-   - Visual learning support details
-   - Classroom environment context
-   - Engagement and cultural sensitivity factors
-       - **No text requirement**: Generated images will contain NO text, words, letters, or written characters of any kind to ensure content moderation compliance
-3. **Enhanced Output**: Detailed prompt like "A scientifically accurate illustration of a domestic cat in a bright, modern science classroom setting, with clear anatomical features for biology lessons, engaging expression that captures student interest, child-friendly art style suitable for elementary students, surrounded by educational elements like a microscope, science books, and a whiteboard - no text, labels, or written content should appear in the image"
-4. **Image Generation**: Enhanced prompt is sent to Qwen Image via DashScope for high-quality, educationally-focused generation
-
-### Benefits for Teachers
-
-- ✅ **Simple Input**: Teachers can use basic prompts
-- ✅ **Educational Focus**: Automatically generates subject-specific, learning-objective-driven descriptions
-- ✅ **Classroom Ready**: Images are optimized for lesson plans and educational activities
-- ✅ **Age Appropriate**: Content tailored for specific K12 grade levels
-- ✅ **Cross-Curricular**: Supports multiple subject areas and learning objectives
-- ✅ **Time Saving**: No need to write lengthy, educationally-focused prompts
-- ✅ **Visual Learning**: Enhanced prompts create images that support visual learning strategies
-
-### Configuration
-
-Set `ENABLE_PROMPT_ENHANCEMENT=true` in your `.env` file to enable this feature.
-
-### 2. Generate Image (JSON Response)
-- **URL**: `/generate-image`
-- **Method**: `POST`
-- **Content-Type**: `application/json`
-
-### 3. Generate Image (Plain Text Response)
-- **URL**: `/generate-image-text`
-- **Method**: `POST`
-- **Content-Type**: `application/json`
-- **Description**: Returns only the plain text markdown image syntax `![](image_url.png)` with no JSON formatting
-
-#### Request Body
-
-**Minimal Request (Recommended):**
+**Request:**
 ```json
 {
-    "prompt": "一只友好的猫在明亮的现代科学教室里"
+  "prompt": "一副典雅庄重的对联悬挂于厅堂之中",
+  "size": "1328*1328",
+  "watermark": false,
+  "negative_prompt": "",
+  "prompt_extend": true
 }
 ```
 
-**Full Request (All Parameters):**
+**Response:**
 ```json
 {
-    "prompt": "一副典雅庄重的对联悬挂于厅堂之中，房间是个安静古典的中式布置，桌子上放着一些青花瓷，对联上左书"义本生知人机同道善思新"，右书"通云赋智乾坤启数高志远"， 横批"智启通义"，字体飘逸，中间挂在一着一副中国风的画作，内容是岳阳楼。",
+  "success": true,
+  "image_url": "http://localhost:9528/temp_images/generated_20250831_161449_abc123.jpg",
+  "markdown_image": "![](http://localhost:9528/temp_images/generated_20250831_161449_abc123.jpg)",
+  "message": "Image generated successfully",
+  "filename": "generated_20250831_161449_abc123.jpg",
     "size": "1328*1328",
-    "negative_prompt": "",
-    "watermark": true,
-    "prompt_extend": true
+  "prompt_enhanced": true,
+  "original_prompt": "一副典雅庄重的对联",
+  "enhanced_prompt": "An elegant and dignified Chinese couplet...",
+  "timestamp": "20250831_161449",
+  "request_id": "abc123de-f456-7890-ghij-klmnopqrstuv"
 }
 ```
 
-#### Parameters
+### 2. Generate Image (Plain Text Response)
 
-**Required:**
-- `prompt`: Text description for image generation
+**POST** `/generate-image-text`
 
-**Optional (all have sensible defaults):**
-- `size`: Image dimensions and aspect ratio (default: "1664*928")
-  - `1664*928`: 16:9 (landscape) - **Default**
-  - `1472*1140`: 4:3 (landscape) 
-  - `1328*1328`: 1:1 (square)
-  - `1140*1472`: 3:4 (portrait)
-  - `928*1664`: 9:16 (portrait)
-- `negative_prompt`: What to avoid in the image (default: "")
-- `watermark`: Add watermark (default: false, for clean educational materials)
-- `prompt_extend`: Extend prompt automatically (default: false, since we use Qwen Turbo via DashScope for enhancement)
-- `plain_text`: Set to `true` to return only plain text markdown syntax instead of JSON (default: false)
+Generate an image and return only the plain text URL.
 
-#### Response
+**Request:**
 ```json
 {
-    "success": true,
-    "image_url": "http://localhost:9528/temp_images/generated_20241201_143022_abc12345.jpg",
-    "markdown_image": "![](http://localhost:9528/temp_images/generated_20241201_143022_abc12345.jpg)",
-    "message": "Image generated successfully",
-    "filename": "generated_20241201_143022_abc12345.jpg",
-    "size": "1664*928",
-    "prompt_enhanced": true,
-    "original_prompt": "a cat",
-    "enhanced_prompt": "A friendly, educational illustration of a domestic cat in a bright, colorful classroom setting, with clear anatomical features, engaging expression, and child-friendly art style suitable for K12 students"
+  "prompt": "一只可爱的小猫在阳光明媚的花园里玩耍"
 }
 ```
 
-### 4. Retrieve Generated Image
-- **URL**: `/temp_images/<filename>`
-- **Method**: `GET`
-- **Description**: Download generated images
+**Response (plain text):**
+```
+http://localhost:9528/temp_images/generated_20250831_161449_abc123.jpg
+```
 
-### 5. Health Check
-- **URL**: `/health`
-- **Method**: `GET`
-- **Description**: Comprehensive application status and system health monitoring
+### 3. Health Check
 
-#### Response
+**GET** `/health`
+
+Check API health status.
+
+**Response:**
 ```json
 {
     "status": "healthy",
-    "timestamp": "2025-08-31T03:05:28.388947",
-    "version": "1.0.0",
-    "system": {
-        "api_key_configured": true,
-        "temp_folder_accessible": true,
-        "free_space_mb": 755871.47,
-        "stored_images": 14,
-        "default_image_size": "1664*928",
-        "prompt_enhancement_enabled": true
-    }
+  "service": "MindT2I",
+  "version": "2.0.0"
 }
 ```
 
-### 6. Configuration Information
-- **URL**: `/config`
-- **Method**: `GET`
-- **Description**: Non-sensitive application configuration and supported features
+### 4. Status Check
 
-#### Response
+**GET** `/status`
+
+Get detailed application metrics.
+
+**Response:**
 ```json
 {
-    "success": true,
-    "config": {
-        "default_image_size": "1664*928",
-        "default_watermark": false,
-        "default_prompt_extend": false,
-        "prompt_enhancement_enabled": true,
-        "server_host": "localhost",
-        "server_port": "9528",
-        "flask_host": "0.0.0.0",
-        "supported_image_sizes": [
-            "1664*928", "1472*1140", "1328*1328", "1140*1472", "928*1664"
-        ]
-    }
+  "status": "running",
+  "framework": "FastAPI",
+  "version": "2.0.0",
+  "uptime_seconds": 123.4,
+  "memory_percent": 45.2,
+  "timestamp": 1640995200.0
 }
 ```
 
-### 7. Debug Interface
-- **URL**: `/debug`
-- **Method**: `GET`
-- **Description**: Interactive web interface for testing the API and viewing generated images
+### 5. Debug Interface
 
-## Usage Examples
+**GET** `/debug`
 
-### cURL Examples
+Interactive web interface for testing image generation with:
+- Beautiful modern UI
+- Real-time image preview
+- Image download and sharing
+- Recent prompts history
+- Example prompts
+- Size and watermark controls
 
-#### Minimal Request (Recommended)
+**Access at**: http://localhost:9528/debug
+
+### 6. API Documentation
+
+- **Swagger UI**: http://localhost:9528/docs
+- **ReDoc**: http://localhost:9528/redoc
+
+### 7. Intelligent Generation (NEW! 🧠)
+
+**POST** `/generate`
+
+**ReAct Agent** automatically detects if you want image or video!
+
 ```bash
-curl --location 'http://localhost:9528/generate-image' \
---header 'Content-Type: application/json' \
---data '{
-    "prompt": "一只友好的猫在明亮的现代科学教室里"
-}'
+curl -X POST "http://localhost:9528/generate" \
+  -H "Content-Type: application/json" \
+  -d '{"prompt": "一只小猫在月光下奔跑"}'
 ```
 
-#### JSON Response with All Parameters
-```bash
-curl --location 'http://localhost:9528/generate-image' \
---header 'Content-Type: application/json' \
---data '{
-    "prompt": "一副典雅庄重的对联悬挂于厅堂之中，房间是个安静古典的中式布置，桌子上放着一些青花瓷，对联上左书"义本生知人机同道善思新"，右书"通云赋智乾坤启数高志远"， 横批"智启通义"，字体飘逸，中间挂在一着一副中国风的画作，内容是岳阳楼。",
-    "size": "1328*1328",
-    "negative_prompt": "",
-    "watermark": true,
-    "prompt_extend": true
-}'
+The agent will:
+1. Check for explicit keywords ("video", "image", "picture", etc.)
+2. Default to IMAGE if no keywords found
+3. Route and generate IMMEDIATELY (< 1ms routing time!)
+
+**Response includes reasoning:**
+```json
+{
+  "type": "video",
+  "url": "https://...",
+  "intent_analysis": {
+    "detected_type": "video",
+    "confidence": 0.95,
+    "reasoning": "Contains '奔跑' (running) which indicates motion"
+  }
+}
 ```
 
-#### Plain Text Response (Minimal)
-```bash
-curl --location 'http://localhost:9528/generate-image-text' \
---header 'Content-Type: application/json' \
---data '{
-    "prompt": "一只友好的猫在明亮的现代科学教室里"
-}'
+See [REACT_AGENT.md](docs/REACT_AGENT.md) for full documentation.
+
+### 8. Access the Debug Interface
+
+Open your browser and visit:
+```
+http://localhost:9528/debug
 ```
 
-**Response**: `![](http://localhost:9528/temp_images/generated_20241201_143022_abc12345.jpg)`
+This gives you a beautiful interactive interface for testing!
 
-### Python Examples
+### Request Parameters
 
-#### Minimal Request (Recommended)
+**Required:**
+- `prompt` (string): Text description for image generation
+
+**Optional:**
+- `size` (string): Image dimensions. Options:
+  - `1664*928` (16:9 landscape)
+  - `1472*1140` (4:3 landscape)
+  - `1328*1328` (1:1 square) - **default**
+  - `1140*1472` (3:4 portrait)
+  - `928*1664` (9:16 portrait)
+- `watermark` (boolean): Add watermark (default: `false`)
+- `negative_prompt` (string): What to avoid in the image (default: `""`)
+- `prompt_extend` (boolean): Auto-extend prompt (default: `true`)
+
+## 💻 Usage Examples
+
+### Python (Synchronous)
+
 ```python
 import requests
 
-url = "http://localhost:9528/generate-image"
-payload = {
-    "prompt": "A beautiful sunset over mountains with golden clouds"
-}
+response = requests.post(
+    "http://localhost:9528/generate-image",
+    json={"prompt": "A beautiful sunset over mountains"}
+)
 
-response = requests.post(url, json=payload)
-if response.status_code == 200:
     result = response.json()
-    print(f"Image generated: {result['image_url']}")
-    print(f"Markdown format: {result['markdown_image']}")
-else:
-    print(f"Error: {response.text}")
+print(f"Image URL: {result['image_url']}")
 ```
 
-#### JSON Response with All Parameters
+### Python (Async)
+
 ```python
-import requests
-import json
+import aiohttp
+import asyncio
 
-url = "http://localhost:9528/generate-image"
-payload = {
-    "prompt": "A beautiful sunset over mountains with golden clouds",
-    "size": "1664*928",  # 16:9 landscape
-    "watermark": False,
-    "negative_prompt": "dark, gloomy",
-    "prompt_extend": True
-}
+async def generate_image():
+    async with aiohttp.ClientSession() as session:
+        async with session.post(
+            "http://localhost:9528/generate-image",
+            json={"prompt": "A beautiful sunset over mountains"}
+        ) as response:
+            result = await response.json()
+            print(f"Image URL: {result['image_url']}")
 
-response = requests.post(url, json=payload)
-if response.status_code == 200:
-    result = response.json()
-    print(f"Image generated: {result['image_url']}")
-    print(f"Markdown format: {result['markdown_image']}")
-else:
-    print(f"Error: {response.text}")
+asyncio.run(generate_image())
 ```
 
-#### Plain Text Response (Minimal)
-```python
-import requests
+### cURL
 
-url = "http://localhost:9528/generate-image-text"
-payload = {
-    "prompt": "A serene Japanese garden with cherry blossoms"
-}
-
-response = requests.post(url, json=payload)
-if response.status_code == 200:
-    markdown_text = response.text
-    print(f"Plain text output: {markdown_text}")
-    # Output: ![](http://localhost:9528/temp_images/generated_20241201_143022_abc12345.jpg)
-else:
-    print(f"Error: {response.text}")
+```bash
+curl -X POST "http://localhost:9528/generate-image" \
+  -H "Content-Type: application/json" \
+  -d '{"prompt": "A beautiful sunset over mountains"}'
 ```
 
-### JavaScript Examples
+### JavaScript
 
-#### Minimal Request (Recommended)
 ```javascript
 const response = await fetch('http://localhost:9528/generate-image', {
     method: 'POST',
-    headers: {
-        'Content-Type': 'application/json',
-    },
+    headers: {'Content-Type': 'application/json'},
     body: JSON.stringify({
-        prompt: "A serene Japanese garden with cherry blossoms"
+        prompt: "A beautiful sunset over mountains"
     })
 });
 
 const result = await response.json();
-if (result.success) {
     console.log(`Image URL: ${result.image_url}`);
-    console.log(`Markdown format: ${result.markdown_image}`);
-} else {
-    console.error(`Error: ${result.error}`);
-}
 ```
 
-#### JSON Response with All Parameters
-```javascript
-const response = await fetch('http://localhost:9528/generate-image', {
-    method: 'POST',
-    headers: {
-        'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-        prompt: "A serene Japanese garden with cherry blossoms",
-        size: "1140*1472",  // 3:4 portrait
-        negative_prompt: "dark, gloomy",
-        watermark: false,
-        prompt_extend: true
-    })
-});
+## ⚙️ Configuration
 
-const result = await response.json();
-if (result.success) {
-    console.log(`Image URL: ${result.image_url}`);
-    console.log(`Markdown format: ${result.markdown_image}`);
-} else {
-    console.error(`Error: ${result.error}`);
-}
-```
+All configuration is managed through environment variables in `.env`:
 
-#### Plain Text Response (Minimal)
-```javascript
-const response = await fetch('http://localhost:9528/generate-image-text', {
-    method: 'POST',
-    headers: {
-        'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-        prompt: "A friendly cat in a bright science classroom"
-    })
-});
+### Required Settings
+- `DASHSCOPE_API_KEY`: Your DashScope API key
 
-if (response.ok) {
-    const markdownText = await response.text();
-    console.log(`Plain text output: ${markdownText}`);
-    // Output: ![](http://localhost:9528/temp_images/generated_20241201_143022_abc12345.jpg)
-} else {
-    const errorText = await response.text();
-    console.error(`Error: ${errorText}`);
-}
-```
+### Server Settings
+- `HOST`: Server host (default: `0.0.0.0`)
+- `PORT`: Server port (default: `9528`)
+- `SERVER_HOST`: Host for image URLs (default: `localhost`)
+- `DEBUG`: Debug mode with auto-reload (default: `false`)
+- `LOG_LEVEL`: Logging level (default: `INFO`)
 
-## Configuration
+### Model Settings
+- `IMAGE_MODEL`: Image generation model (default: `wan2.5-t2i-preview`)
+- `VIDEO_MODEL`: Video generation model (default: `wan2.5-t2v-preview`)
+- `QWEN_TEXT_MODEL`: Text model for enhancement (default: `qwen-turbo`)
 
-### Environment Variables
+### Image Generation Defaults
+- `DEFAULT_IMAGE_SIZE`: Default size (default: `1328*1328`)
+- `DEFAULT_WATERMARK`: Add watermark (default: `false`)
+- `DEFAULT_PROMPT_EXTEND`: Auto-extend prompt (default: `true`)
+- `ENABLE_PROMPT_ENHANCEMENT`: Use LLM enhancement (default: `true`)
 
-The application uses environment variables for configuration. The easiest way to set them up is:
+### Advanced Settings
+- `API_TIMEOUT`: API request timeout (default: `60` seconds)
+- `IMAGE_DOWNLOAD_TIMEOUT`: Image download timeout (default: `30` seconds)
+- `MIN_PROMPT_LENGTH`: Minimum prompt length (default: `3`)
+- `MAX_PROMPT_LENGTH`: Maximum prompt length (default: `1000`)
+- `TEMP_FOLDER`: Temporary images folder (default: `temp_images`)
 
-1. **Copy the example file:**
+See `env.example` for complete configuration template.
+
+## 🧪 Testing
+
    ```bash
-   cp env.example .env
-   ```
-
-2. **Edit the .env file** with your actual values:
-   ```bash
-   # Required
-   DASHSCOPE_API_KEY=your_actual_api_key_here
-   
-   # Optional (uncomment to customize)
-   # FLASK_PORT=5000
-   # TEMP_FOLDER=temp_images
-   ```
-
-**Required Variables:**
-- `DASHSCOPE_API_KEY`: Your DashScope API key (required)
-
-**Optional Variables:**
-- `DEFAULT_IMAGE_SIZE`: Default image size (default: "1664*928")
-- `DEFAULT_WATERMARK`: Enable watermark by default (default: "false", for clean educational materials)
-- `DEFAULT_PROMPT_EXTEND`: Enable prompt extension by default (default: "false", since we use Qwen Turbo via DashScope for enhancement)
-- `ENABLE_PROMPT_ENHANCEMENT`: Enable AI-powered educational prompt enhancement for K12 classroom use using Qwen Turbo via DashScope (default: "true")
-- `FLASK_HOST`: IP address to bind Flask server to (default: "0.0.0.0" for all interfaces)
-- `FLASK_PORT`: Port for Flask server to bind to (default: 9528)
-- `FLASK_DEBUG`: Enable debug mode (default: "false" for production)
-- `SERVER_HOST`: Server hostname/IP for image URLs (default: "localhost")
-- `SERVER_PORT`: Server port for image URLs (default: "9528")
-- `API_TIMEOUT`: Timeout for DashScope API calls in seconds (default: 60)
-- `IMAGE_DOWNLOAD_TIMEOUT`: Timeout for image download in seconds (default: 30)
-- `MAX_PROMPT_LENGTH`: Maximum prompt length in characters (default: 1000)
-- `MIN_PROMPT_LENGTH`: Minimum prompt length in characters (default: 3)
-- `TEMP_FOLDER`: Folder to store generated images (default: temp_images)
-- `LOG_LEVEL`: Logging level (default: INFO)
-
-### Application Settings
-- **Max file size**: 16MB
-- **Temp folder**: `temp_images/`
-- **API timeout**: Configurable via `API_TIMEOUT` (default: 60 seconds)
-- **Image download timeout**: Configurable via `IMAGE_DOWNLOAD_TIMEOUT` (default: 30 seconds)
-- **Flask port**: Configurable via `FLASK_PORT` (default: 9528)
-- **Server port**: Configurable via `SERVER_PORT` (default: 9528)
-
-### Server Configuration Notes
-
-**FLASK_HOST vs SERVER_HOST:**
-- `FLASK_HOST`: Controls which network interface Flask binds to (e.g., "0.0.0.0" for all interfaces, "127.0.0.1" for localhost only)
-- `FLASK_PORT`: Port for Flask server to bind to (default: 9528)
-- `SERVER_HOST`: Used in generated image URLs (e.g., "localhost", "192.168.1.100", "yourdomain.com")
-- `SERVER_PORT`: Port used in generated image URLs (default: 9528)
-
-**Example configurations:**
-- **Local development**: `FLASK_HOST=127.0.0.1`, `FLASK_PORT=9528`, `SERVER_HOST=localhost`, `SERVER_PORT=9528`
-- **Network accessible**: `FLASK_HOST=0.0.0.0`, `FLASK_PORT=9528`, `SERVER_HOST=192.168.1.100`, `SERVER_PORT=9528`
-- **Production**: `FLASK_HOST=0.0.0.0`, `FLASK_PORT=9528`, `SERVER_HOST=yourdomain.com`, `SERVER_PORT=443`
-- **Custom port**: `FLASK_HOST=0.0.0.0`, `FLASK_PORT=5000`, `SERVER_HOST=localhost`, `SERVER_PORT=5000`
-
-## File Structure
-```
-MindT2I/
-├── app.py              # Main Flask application with enhanced security and error handling
-├── requirements.txt    # Python dependencies including Flask-Limiter
-├── README.md          # This comprehensive documentation file
-├── CHANGELOG.md       # Detailed changelog of all improvements and features
-├── env.example        # Environment variables template
-├── .env               # Your environment variables (create from env.example)
-├── test_api.py        # Comprehensive test suite for API endpoints and security features
-├── debug.html         # Interactive debug interface for testing the API
-└── temp_images/       # Generated images storage (auto-created, 24h cleanup)
+# Run the test suite
+python tests/test_fastapi.py
 ```
 
-## 🚨 **Error Handling**
+The test suite includes:
+- Health and status checks
+- Image generation (JSON and plain text)
+- Minimal request validation
+- Error handling
+- Timeout testing
 
-### **Structured Error Codes**
-The application uses structured error codes for consistent error handling:
+## 🏗️ Architecture
 
-| Error Code | HTTP Status | Description |
-|------------|-------------|-------------|
-| `INVALID_CONTENT_TYPE` | 400 | Content-Type must be application/json |
-| `INVALID_JSON` | 400 | Invalid JSON data in request body |
-| `MISSING_PROMPT` | 400 | Prompt field is required |
-| `PROMPT_VALIDATION_FAILED` | 400 | Prompt validation failed (length, content) |
-| `API_KEY_MISSING` | 500 | DashScope API key not configured |
-| `API_TIMEOUT` | 504 | External API request timed out |
-| `API_REQUEST_FAILED` | 500 | External API request failed |
-| `INVALID_API_RESPONSE` | 500 | Failed to parse API response |
-| `API_ERROR` | Variable | DashScope API returned an error |
-| `INVALID_RESPONSE_FORMAT` | 500 | Unexpected response format from API |
-| `IMAGE_SAVE_FAILED` | 500 | Failed to save generated image |
-| `INVALID_FILENAME` | 400 | Invalid filename (security check failed) |
-| `IMAGE_NOT_FOUND` | 404 | Requested image not found |
-| `ENDPOINT_NOT_FOUND` | 404 | Requested endpoint does not exist |
-| `METHOD_NOT_ALLOWED` | 405 | HTTP method not allowed for endpoint |
-| `INTERNAL_ERROR` | 500 | Unexpected internal server error |
+### FastAPI Application
+Modern async web framework with:
+- Full async/await support for high performance
+- Automatic OpenAPI documentation
+- Pydantic models for type safety
+- Built-in request validation
 
-### **Error Response Format**
-All errors follow a consistent JSON format:
-```json
-{
-    "success": false,
-    "error": "Human-readable error message",
-    "error_code": "STRUCTURED_ERROR_CODE",
-    "details": "Additional error details (when available)"
-}
-```
+### LLM Client Layer
+Clean abstraction for DashScope APIs:
+- **MultiModalClient**: Image generation with Qwen Image Plus
+- **TextClient**: Prompt enhancement with Qwen Turbo
+- Async HTTP clients (aiohttp)
+- Proper error handling and retries
 
-### **Comprehensive Error Coverage**
-The application handles errors in:
-- **Request Validation**: Content type, JSON format, required fields
-- **Input Validation**: Prompt length, filename security, image size
-- **API Communication**: Timeouts, network failures, response parsing
-- **File Operations**: Image saving, retrieval, cleanup
-- **System Operations**: Configuration, permissions, disk space
+### Service Layer
+Business logic separation:
+- Image generation workflow
+- Prompt validation and enhancement
+- File management and cleanup
+- Error handling and logging
 
-## 🔒 **Security Features**
+### Configuration Management
+Centralized config with:
+- Environment variable loading
+- Property-based access with caching
+- Validation and defaults
+- Type safety
 
-### **Rate Limiting & Protection**
-- **Rate Limiting**: 10 requests per minute per IP address to prevent abuse
-- **Request Size Limits**: Maximum 16MB file size to prevent memory attacks
-- **Timeout Protection**: 60-second timeout for external API calls
+## 🔧 Development
 
-### **Input Validation & Sanitization**
-- **Content-Type Validation**: Strict enforcement of `application/json` for POST requests
-- **Filename Sanitization**: Comprehensive sanitization using Werkzeug's `secure_filename`
-- **Path Traversal Protection**: Blocked access to parent directories and system files
-- **XSS Protection**: Malicious filename injection prevention
+### Running in Development Mode
 
-### **Error Handling & Monitoring**
-- **Structured Error Codes**: Consistent error response format for better debugging
-- **Comprehensive Logging**: Professional logging system for security monitoring
-- **Input Validation**: Enhanced prompt validation (3-1000 characters)
-- **API Response Validation**: Robust parsing of external API responses
-
-### **System Security**
-- **Environment Variables**: Secure API key storage via environment variables
-- **File Permissions**: Proper file access controls and validation
-- **Automatic Cleanup**: 24-hour image retention policy to prevent disk space attacks
-- **Cross-Platform Security**: Consistent security across Windows, Linux, and macOS
-
-## Troubleshooting
-
-### Common Issues
-
-1. **API Key Not Set**
-   - Ensure `DASHSCOPE_API_KEY` environment variable is set
-   - Restart the application after setting the variable
-
-2. **Permission Denied**
-   - Ensure the application has write permissions to create the `temp_images` folder
-
-3. **Timeout Errors**
-   - Image generation can take 1-2 minutes
-   - Check your internet connection
-   - Verify DashScope API service status
-
-4. **Port Already in Use**
-   - Change the port in `app.py` or stop other services using port 5000
-
-### Logs
-The application logs all operations to help with debugging. Check the console output for detailed information.
-
-## 🧪 **Testing & Validation**
-
-### **Comprehensive Test Suite**
-The application includes a comprehensive test suite (`test_api.py`) that validates:
-
-#### **Core Functionality Tests**
-- **Health Check**: System status and configuration validation
-- **Image Generation**: Multiple prompt types and image sizes
-- **Image Retrieval**: Generated image download and validation
-- **Prompt Enhancement**: Qwen Turbo enhancement functionality
-
-#### **Security Feature Tests**
-- **Rate Limiting**: 10 requests per minute enforcement
-- **Path Traversal Protection**: Malicious path access prevention
-- **XSS Protection**: Malicious filename injection prevention
-- **Input Validation**: Prompt length and content validation
-
-#### **Error Handling Tests**
-- **Invalid Requests**: Missing prompts, empty data, malformed JSON
-- **Error Responses**: Structured error codes and HTTP status codes
-- **New Endpoints**: Configuration and health check validation
-
-### **Running the Test Suite**
 ```bash
-# Ensure the Flask application is running
-python app.py
+# With auto-reload
+python main.py  # Set DEBUG=true in .env
 
-# In another terminal, run the test suite
-python test_api.py
+# Or using uvicorn directly
+uvicorn main:app --reload --host 0.0.0.0 --port 9528
 ```
 
-### **Test Coverage**
-- ✅ **API Endpoints**: All endpoints tested and validated
-- ✅ **Security Features**: Rate limiting, input validation, path traversal protection
-- ✅ **Error Handling**: Comprehensive error response validation
-- ✅ **Performance**: Image generation time monitoring
-- ✅ **Cross-Platform**: Windows and Unix compatibility testing
+### Production Deployment
 
-## 📊 **Performance & Monitoring**
-
-### **Health Monitoring**
-- **Real-time Status**: System health checks with detailed metrics
-- **Resource Monitoring**: Disk space, file count, and accessibility
-- **Performance Tracking**: Image generation time measurement
-- **Error Tracking**: Comprehensive logging and error monitoring
-
-### **Automatic Maintenance**
-- **Image Cleanup**: 24-hour automatic cleanup of old temporary images
-- **Disk Space Management**: Proactive monitoring and cleanup
-- **Log Rotation**: Professional logging without disk space issues
-- **Configuration Validation**: Startup validation with helpful warnings
-
-## 🔧 **Development & Deployment**
-
-### **Development Setup**
 ```bash
-# Clone and setup
-git clone https://github.com/lycosa9527/MindT2I.git
-cd MindT2I
+# Set DEBUG=false in .env
+uvicorn main:app --host 0.0.0.0 --port 9528 --workers 4
+```
 
-# Install dependencies
+## 🐛 Troubleshooting
+
+### Port Already in Use
+
+```bash
+# Windows
+netstat -ano | findstr :9528
+taskkill /F /PID <PID>
+
+# Linux/Mac
+lsof -ti :9528 | xargs kill -9
+```
+
+### Module Not Found
+
+```bash
+# Make sure you're in the project root
+cd "C:\Users\roywa\Documents\Cursor Projects\MindT2I"
+
+# Reinstall dependencies
 pip install -r requirements.txt
-
-# Configure environment
-cp env.example .env
-# Edit .env with your API key
-
-# Run development server
-python app.py
 ```
 
-### **Production Deployment**
-- **Environment Variables**: Secure configuration management
-- **Security Features**: Production-ready security implementations
-- **Error Handling**: Comprehensive error management and logging
-- **Health Monitoring**: Real-time system status monitoring
-- **Cross-Platform**: Consistent behavior across operating systems
+### API Key Issues
 
-### **Configuration Management**
-- **Environment Variables**: Comprehensive .env support
-- **Server Binding**: Configurable network interface binding
-- **Image Sizes**: All official DashScope image size support
-- **Default Settings**: Configurable defaults for all features
+```bash
+# Check your .env file
+type .env  # Windows
+cat .env   # Linux/Mac
 
-## Support
+# Make sure DASHSCOPE_API_KEY is set correctly
+```
+
+### Check Logs
+
+```bash
+# View application logs
+type logs\app.log  # Windows
+cat logs/app.log   # Linux/Mac
+```
+
+## 📚 Documentation
+
+- **[API_REFERENCE.md](docs/API_REFERENCE.md)**: Complete API reference and integration guide
+- **[QUICKSTART.md](docs/QUICKSTART.md)**: 5-minute quick start guide
+- **[MIGRATION_GUIDE.md](docs/MIGRATION_GUIDE.md)**: Migration from Flask v1.0
+- **[CHANGELOG.md](CHANGELOG.md)**: Detailed version history (v2.2.0)
+- **[VERSION](VERSION)**: Current version number (single source of truth)
+- **[docs/README.md](docs/README.md)**: Complete documentation index
+- **[tests/README.md](tests/README.md)**: Testing guide
+- **API Docs**: http://localhost:9528/docs (when server is running)
+
+## 🔒 Security Features
+
+- **Type Safety**: Pydantic models prevent type errors
+- **Input Validation**: Automatic request validation
+- **File Security**: Sanitized filenames and secure paths
+- **Error Handling**: Structured error responses without sensitive info
+- **Timeout Protection**: Configurable timeouts for external APIs
+- **CORS**: Configurable CORS middleware
+
+## 🚀 Performance
+
+- **Async/Await**: Full async support for concurrent requests
+- **Connection Pooling**: Efficient HTTP client management
+- **Automatic Cleanup**: Scheduled cleanup of old images
+- **GZip Compression**: Reduced response sizes
+- **Fast Startup**: Optimized initialization
+
+## 📈 Version History
+
+### v2.2.0 (Current - 2025-10-22)
+- Upgraded to wan2.5-t2i-preview for images (MINOR: significant model upgrade)
+- Confirmed wan2.5-t2v-preview for videos
+- Added VERSION file for version management
+- Professional UI without emojis
+- Project structure cleanup
+
+### v2.1.0 (2025-01-21)
+- Video generation support
+- ReAct agent for intelligent routing
+- Concurrency controls
+- Complete async architecture
+
+### v2.0.0 (Legacy)
+- Complete FastAPI redesign
+- Async/await throughout
+- Modular architecture
+- Type-safe with Pydantic
+
+### v1.0.0 (Legacy - Removed)
+- Flask-based implementation
+
+See `CHANGELOG.md` for detailed version history.
+
+## 📄 License
+
+AGPLv3
+
+## 👥 Support
 
 For issues related to:
 - **DashScope API**: Contact Alibaba Cloud support
-- **Application**: Check the logs and ensure proper configuration
-- **Image Generation**: Verify your API key and internet connection
-- **Testing**: Run the comprehensive test suite for validation
-- **Security**: Review the security features documentation
+- **Application**: Check logs and verify configuration
+- **Installation**: Ensure all dependencies are installed
+- **API Usage**: Refer to interactive docs at `/docs`
 
-## 📈 **Project Status**
+## 🙏 Acknowledgments
 
-### **Current Version**: 1.0.0
-- **Status**: Production Ready ✅
-- **Security**: Enterprise-grade security features implemented
-- **Testing**: Comprehensive test suite with 100% coverage
-- **Documentation**: Complete API documentation and examples
-- **Cross-Platform**: Windows, Linux, and macOS support
-
-### **Recent Major Updates**
-- **Security Enhancement**: Rate limiting, input validation, and protection against common attacks
-- **Error Handling**: Structured error codes and comprehensive error management
-- **Health Monitoring**: Real-time system status and resource monitoring
-- **Testing Suite**: Comprehensive validation of all features and security measures
-- **Cross-Platform**: Fixed Windows compatibility issues
-
-### **Roadmap**
-- **User Authentication**: Optional user management system
-- **Image Gallery**: Persistent image storage and management
-- **Advanced Prompts**: Template-based prompt generation
-- **Batch Processing**: Multiple image generation support
-- **Analytics Dashboard**: Usage statistics and performance metrics
-
-## License
-
-This project is developed by MindSpring Team. Please ensure compliance with DashScope API terms of service.
+- Architecture inspired by MindGraph project
+- Powered by Alibaba Cloud DashScope API
+- Built with FastAPI framework
 
 ---
 
 **Made with ❤️ by MindSpring Team | Author: lycosa9527**
-
----
-
-## 📚 **Additional Resources**
-
-- **CHANGELOG.md**: Detailed history of all changes and improvements
-- **env.example**: Environment variable configuration template
-- **test_api.py**: Comprehensive test suite for validation
-- **debug.html**: Interactive testing interface
-
-For questions, issues, or contributions, please refer to the comprehensive documentation above or contact the development team.

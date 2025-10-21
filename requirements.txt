@@ -1,5 +1,31 @@
-Flask==3.0.0
-requests==2.31.0
-Werkzeug==3.0.1
-python-dotenv==1.0.0
-Flask-Limiter==3.5.0
+# MindT2I Requirements
+# FastAPI v2.1.0 - AI-Powered Image & Video Generation
+# =====================================================
+
+# Core Framework
+fastapi==0.104.1          # Modern async web framework
+uvicorn[standard]==0.24.0 # ASGI server with WebSocket support
+pydantic==2.5.0           # Data validation using Python type hints
+
+# HTTP Clients
+aiohttp==3.9.1            # Async HTTP client for API calls
+requests==2.31.0          # Sync HTTP client for testing
+
+# Configuration & Environment
+python-dotenv==1.0.0      # Environment variable management
+
+# AI Services
+dashscope==1.24.7         # Alibaba Cloud DashScope SDK (image + video generation)
+
+# System Monitoring (Optional)
+psutil==5.9.6             # System and process utilities for health checks
+
+# Template Engine
+# Jinja2==3.1.2           # HTML templating (included with FastAPI)
+
+# Notes:
+# - All packages are pinned to specific versions for reproducibility
+# - uvicorn[standard] includes WebSocket, HTTP/2, and performance extras
+# - Jinja2 is automatically installed as a FastAPI dependency
+# - dashscope SDK includes both image and video generation capabilities
+# - psutil is optional but recommended for /health endpoint metrics
