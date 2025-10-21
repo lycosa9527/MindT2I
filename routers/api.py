@@ -209,26 +209,33 @@ async def generate_video_text(request: ImageGenerationRequest):
         )
         
         logger.info("=" * 80)
-        logger.info("/generate-video ENDPOINT - PLAIN TEXT RESPONSE")
+        logger.info("VIDEO GENERATION COMPLETE - CONSTRUCTING RESPONSE")
         logger.info("=" * 80)
-        logger.info(f"Result from unified_service:")
-        logger.info(f"  type: {result.get('type')}")
-        logger.info(f"  url: {result.get('url')}")
-        logger.info(f"  text: {result.get('text')}")
-        logger.info(f"  message: {result.get('message')}")
-        logger.info(f"  filename: {result.get('filename')}")
+        logger.info(f"Result dict keys: {list(result.keys())}")
+        logger.info(f"Result type: {type(result)}")
+        logger.info(f"Full result dict: {result}")
         
         # Return user-friendly message with download link
         video_url = result.get('url')
         plain_text = f"Please copy the link to your web browser to download the video, video URL: {video_url}"
         
-        logger.info(f"Returning plain text: {plain_text[:150]}...")
-        logger.info("=" * 80)
+        logger.info("-" * 80)
+        logger.info("SENDING RESPONSE TO CLIENT")
+        logger.info("-" * 80)
+        logger.info(f"Response type: PlainTextResponse")
+        logger.info(f"Status code: 200")
+        logger.info(f"Content: {plain_text}")
+        logger.info(f"Content length: {len(plain_text)} chars")
+        logger.info("-" * 80)
         
-        return PlainTextResponse(
+        response = PlainTextResponse(
             content=plain_text,
             status_code=200
         )
+        logger.info("Response object created successfully")
+        logger.info(f"Response headers: {response.headers}")
+        logger.info(f"Response media_type: {response.media_type}")
+        return response
         
     except ValueError as e:
         logger.warning(f"Validation error: {e}")
