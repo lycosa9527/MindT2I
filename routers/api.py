@@ -215,21 +215,26 @@ async def generate_video_text(request: ImageGenerationRequest):
 
 @router.post(
     "/generate",
-    response_class=PlainTextResponse,
     tags=["Intelligent Generation"],
-    summary="Intelligent image/video generation",
-    description="Uses ReAct agent to automatically determine if user wants image or video, then generates accordingly"
+    summary="Intelligent image/video generation (JSON output for web interface)",
+    description="Uses ReAct agent to automatically determine if user wants image or video, then generates accordingly. Returns JSON with full metadata for web interface."
 )
 async def generate_intelligent(request: ImageGenerationRequest):
     """
-    Intelligent generation endpoint with ReAct agent.
+    Intelligent generation endpoint with ReAct agent (JSON response).
     
     The agent analyzes your prompt using Qwen-turbo and automatically decides
     whether to generate an image or video based on motion indicators.
     
-    Returns plain text:
-    - For images: ![](http://server/temp_images/file.jpg)
-    - For videos: Please copy the link to your web browser to download the video, video URL: [url]
+    Returns JSON with:
+    - type: 'image' or 'video'
+    - url: Direct URL to generated content
+    - markdown: Formatted markdown for display
+    - Full metadata (size, duration, intent_analysis, etc.)
+    
+    For plain text output (DingTalk/Chat), use:
+    - `/generate-image-text` for images
+    - `/generate-video` for videos
     
     Examples:
     - "一只小猫在月光下奔跑" → VIDEO (motion: running)
@@ -248,30 +253,28 @@ async def generate_intelligent(request: ImageGenerationRequest):
             force_type="auto"  # Use intelligent detection
         )
         
-        # Return plain text based on type (consistent with other endpoints)
-        result_type = result.get('type')
-        if result_type == 'image':
-            # Return markdown format: ![](url)
-            plain_text = result.get('markdown')
-        elif result_type == 'video':
-            # Return user-friendly download message
-            plain_text = result.get('text') or result.get('message')
-        else:
-            # Fallback
-            plain_text = str(result)
-        
-        return PlainTextResponse(content=plain_text)
+        # Return full JSON for web interface
+        return result
         
     except ValueError as e:
         logger.warning(f"Validation error: {e}")
-        return PlainTextResponse(
-            content=f"Error: {str(e)}",
-            status_code=400
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "success": False,
+                "error": str(e),
+                "error_code": "VALIDATION_ERROR"
+            }
         )
     except Exception as e:
         logger.error(f"Intelligent generation failed: {e}", exc_info=True)
-        return PlainTextResponse(
-            content=f"Error: Failed to generate content - {str(e)}",
-            status_code=500
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "success": False,
+                "error": "Failed to generate content",
+                "error_code": "GENERATION_FAILED",
+                "details": str(e)
+            }
         )
 
